@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Sidebar from "./Sidebar";
+import Sidebar from "./layout/Sidebar";
+import KnowledgeBasePlaceholder from "./KnowledgeBasePlaceholder";
 
 const requirements = [
   {
@@ -180,41 +181,43 @@ export default function RequirementsExplorer() {
     <div style={{ display: "flex", width: "100%" }}>
       <Sidebar
         requirements={requirements.map((r) => ({ id: r.id, title: r.title }))}
-        selected={getSectionTitle()}
-        onSelect={(sectionTitle) => {
-          // When a section is selected, select its first detail
-          const req = requirements.find((r) => r.title === sectionTitle);
-          if (req) setSelected(req.details[0]);
-        }}
+        selected={selected === "knowledge-base" ? "knowledge-base" : getSectionTitle()}
+        onSelect={setSelected}
       />
       <main style={{ flex: 1, padding: 32 }}>
-        <nav style={{ marginBottom: 24 }}>
-          <ul style={{ display: "flex", gap: 16, listStyle: "none", padding: 0 }}>
-            {requirements.find((r) => r.title === getSectionTitle())?.details.map((detail) => (
-              <li key={detail}>
-                <button
-                  style={{
-                    background: selected === detail ? "#e0e0e0" : "#f9f9f9",
-                    border: "1px solid #ddd",
-                    borderRadius: 4,
-                    padding: "6px 12px",
-                    fontWeight: selected === detail ? "bold" : "normal",
-                    cursor: "pointer",
-                  }}
-                  onClick={() => setSelected(detail)}
-                >
-                  {detail}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </nav>
-        <h2 style={{ fontSize: 24, fontWeight: 600, marginBottom: 16 }}>{selected}</h2>
-        <ul style={{ paddingLeft: 20 }}>
-          {detailsMap[selected]?.map((detail, idx) => (
-            <li key={idx} style={{ marginBottom: 12 }}>{detail}</li>
-          ))}
-        </ul>
+        {selected === "knowledge-base" ? (
+          <KnowledgeBasePlaceholder />
+        ) : (
+          <>
+            <nav style={{ marginBottom: 24 }}>
+              <ul style={{ display: "flex", gap: 16, listStyle: "none", padding: 0 }}>
+                {requirements.find((r) => r.title === getSectionTitle())?.details.map((detail) => (
+                  <li key={detail}>
+                    <button
+                      style={{
+                        background: selected === detail ? "#e0e0e0" : "#f9f9f9",
+                        border: "1px solid #ddd",
+                        borderRadius: 4,
+                        padding: "6px 12px",
+                        fontWeight: selected === detail ? "bold" : "normal",
+                        cursor: "pointer",
+                      }}
+                      onClick={() => setSelected(detail)}
+                    >
+                      {detail}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+            <h2 style={{ fontSize: 24, fontWeight: 600, marginBottom: 16 }}>{selected}</h2>
+            <ul style={{ paddingLeft: 20 }}>
+              {detailsMap[selected]?.map((detail, idx) => (
+                <li key={idx} style={{ marginBottom: 12 }}>{detail}</li>
+              ))}
+            </ul>
+          </>
+        )}
       </main>
     </div>
   );

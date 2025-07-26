@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GuruBandhu - Lecture Prep</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- 
+        Chosen Palette: Calm Harmony
+        Application Structure Plan: The SPA uses a persistent left sidebar for global navigation and a main content area that dynamically switches between multiple views: a lecture list, a lecture editor, a quick view, live assist, and class dynamics. This structure, common in modern web apps, allows users to maintain context (always seeing the main navigation) while focusing on a specific task (managing the list, editing an item, quickly reviewing a lecture, conducting a live class, or managing class-specific data). This view-swapping is handled by JavaScript, providing a seamless single-page experience without page reloads, which is ideal for usability and workflow efficiency.
+        Visualization & Content Choices: 
+        - Report Info: Lecture Prep Main Screen -> Goal: Organize/Manage -> Viz/Presentation: Interactive Cards -> Interaction: Filter, Sort, Click to Edit -> Justification: Cards are more responsive and visually engaging than a simple table, allowing for better information hierarchy on various screen sizes.
+        - Report Info: Lecture Editor Screen -> Goal: Create/Edit Content -> Viz/Presentation: Two-column layout -> Interaction: Form inputs trigger JS to simulate AI content generation -> Justification: Separating input controls (left column) from generated output (right column) creates a clear, logical workflow for the user, preventing clutter and focusing attention.
+        - Report Info: Quick View Screen -> Goal: Inform/Review -> Viz/Presentation: Structured text blocks with key highlights -> Interaction: Display pre-summarized content, direct link to Live Assist -> Justification: Provides a concise, scannable overview for teachers just before class, focusing on essential information without overwhelming detail.
+        - Report Info: Live Assist Screen -> Goal: Facilitate Live Teaching -> Viz/Presentation: Dual-panel layout (Student Display + Teacher Controls) -> Interaction: Teacher inputs prompt, generates content via AI, pushes to student display, controls recording -> Justification: Clearly separates the projected content from the teacher's interactive controls, enabling real-time, dynamic lesson delivery.
+        - Report Info: Class Dynamics Screen -> Goal: Manage Class Data -> Viz/Presentation: Class List (Cards), Detail View with Tabs -> Interaction: Click class to view details, tab navigation for sub-sections -> Justification: Provides a structured way to manage and view comprehensive data for each class, allowing teachers to drill down into specific aspects like student performance or curriculum.
+        CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
+    -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        .sidebar-icon {
+            width: 1.5rem;
+            text-align: center;
+        }
+        .main-content {
+            transition: opacity 0.3s ease-in-out;
+        }
+        .view {
+            display: none;
+        }
+        .view.active {
+            display: block;
+        }
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #f59e0b;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .tab-button.active {
+            border-bottom: 2px solid #f59e0b;
+            color: #f59e0b;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="bg-stone-50 text-stone-800">
+
+    <div class="flex h-screen">
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 bg-white border-r border-stone-200 flex flex-col">
+            <div class="p-6 border-b border-stone-200">
+                <h1 class="text-2xl font-bold text-amber-600">GuruBandhu</h1>
+                <p class="text-sm text-stone-500">For Multi-Grade Classrooms</p>
+            </div>
+            <nav class="flex-1 p-4 space-y-2">
+                <a href="#" id="nav-dashboard" class="flex items-center px-4 py-2 text-stone-700 rounded-lg hover:bg-amber-50 hover:text-amber-700">
+                    <i class="fa-solid fa-house-chimney sidebar-icon mr-3"></i> Dashboard
+                </a>
+                <a href="#" id="nav-lecture-prep" class="flex items-center px-4 py-2 text-stone-700 rounded-lg hover:bg-amber-50 hover:text-amber-700">
+                    <i class="fa-solid fa-book-open-reader sidebar-icon mr-3"></i> Lecture Prep
+                </a>
+                <a href="#" id="nav-quick-view" class="flex items-center px-4 py-2 text-stone-700 rounded-lg hover:bg-amber-50 hover:text-amber-700">
+                    <i class="fa-solid fa-bolt sidebar-icon mr-3"></i> Quick View
+                </a>
+                <a href="#" id="nav-live-assist" class="flex items-center px-4 py-2 text-stone-700 rounded-lg hover:bg-amber-50 hover:text-amber-700">
+                    <i class="fa-solid fa-person-chalkboard sidebar-icon mr-3"></i> Live Assist
+                </a>
+                <a href="#" id="nav-post-class-analysis" class="flex items-center px-4 py-2 text-stone-700 rounded-lg hover:bg-amber-50 hover:text-amber-700">
+                    <i class="fa-solid fa-chart-line sidebar-icon mr-3"></i> Post Class Analysis
+                </a>
+                <a href="#" id="nav-class-dynamics" class="flex items-center px-4 py-2 text-stone-700 rounded-lg hover:bg-amber-50 hover:text-amber-700">
+                    <i class="fa-solid fa-users sidebar-icon mr-3"></i> Class Dynamics
+                </a>
+            </nav>
+            <div class="p-4 border-t border-stone-200">
+                 <a href="#" id="nav-settings" class="flex items-center px-4 py-2 text-stone-700 rounded-lg hover:bg-stone-100">
+                    <i class="fa-solid fa-gear sidebar-icon mr-3"></i> Settings
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 p-6 lg:p-8 overflow-y-auto">
+
+            <!-- View 1: Lecture Prep - Main Screen -->
+            <div id="lecture-list-view" class="view active">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-3xl font-bold text-stone-800">Lecture Prep</h2>
+                    <button id="create-new-lecture-btn" class="bg-amber-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-amber-700 transition-colors shadow-sm">
+                        <i class="fa-solid fa-plus mr-2"></i>Create New Lecture
+                    </button>
+                </div>
+
+                <div class="mb-6 flex items-center bg-white p-2 rounded-lg border border-stone-200">
+                    <i class="fa-solid fa-magnifying-glass text-stone-400 mx-3"></i>
+                    <input type="text" id="search-bar" placeholder="Search lectures by title, class, or keywords..." class="w-full bg-transparent focus:outline-none text-stone-700">
+                </div>
+                
+                <div id="lecture-list-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Lecture cards will be dynamically inserted here -->
+                </div>
+            </div>
+
+            <!-- View 2: Lecture Editor Screen -->
+            <div id="lecture-editor-view" class="view">
+                <div class="flex items-center mb-6">
+                    <button id="back-to-list-btn" class="text-stone-500 hover:text-amber-600 mr-4">
+                        <i class="fa-solid fa-arrow-left fa-xl"></i>
+                    </button>
+                    <div>
+                        <h2 class="text-3xl font-bold text-stone-800">Lecture Editor</h2>
+                        <p class="text-stone-500">Create and refine your lesson materials.</p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-8 rounded-lg border border-stone-200 grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Left Column: Inputs -->
+                    <div class="flex flex-col space-y-6">
+                        <div>
+                            <h3 class="text-xl font-semibold mb-4 text-stone-700">1. Lecture Details</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="lecture-title" class="block text-sm font-medium text-stone-600 mb-1">Lecture Title</label>
+                                    <input type="text" id="lecture-title" placeholder="e.g., The Water Cycle" class="w-full p-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
+                                </div>
+                                <div>
+                                    <label for="associated-class" class="block text-sm font-medium text-stone-600 mb-1">Associated Class(es)</label>
+                                    <input type="text" id="associated-class" placeholder="e.g., Grade 3-5 Combined" class="w-full p-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
+                                </div>
+                                <div>
+                                    <label for="lecture-topic" class="block text-sm font-medium text-stone-600 mb-1">Topic</label>
+                                    <input type="text" id="lecture-topic" placeholder="e.g., Environmental Science" class="w-full p-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="text-xl font-semibold mb-4 text-stone-700">2. Content Generation</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="content-prompt" class="block text-sm font-medium text-stone-600 mb-1">Prompt</label>
+                                    <textarea id="content-prompt" rows="4" placeholder="Explain photosynthesis to 5th graders in Hindi..." class="w-full p-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"></textarea>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="language-selector" class="block text-sm font-medium text-stone-600 mb-1">Language</label>
+                                        <select id="language-selector" class="w-full p-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
+                                            <option>Hindi</option>
+                                            <option>Bengali</option>
+                                            <option>Marathi</option>
+                                            <option>Telugu</option>
+                                            <option>Tamil</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="grade-selector" class="block text-sm font-medium text-stone-600 mb-1">Grade Level</label>
+                                        <select id="grade-selector" class="w-full p-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
+                                            <option>Grades 1-2</option>
+                                            <option>Grades 3-5</option>
+                                            <option>Grades 6-8</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button class="flex-1 text-sm text-center py-2 px-3 border border-stone-300 rounded-lg hover:bg-stone-100"><i class="fa-solid fa-camera mr-2"></i>Upload Photo</button>
+                                    <button class="flex-1 text-sm text-center py-2 px-3 border border-stone-300 rounded-lg hover:bg-stone-100"><i class="fa-solid fa-file-lines mr-2"></i>Upload Material</button>
+                                </div>
+                                <button id="generate-content-btn" class="w-full bg-amber-600 text-white py-3 rounded-lg font-semibold hover:bg-amber-700 transition-colors shadow-sm flex items-center justify-center">
+                                    <i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Generate Content
+                                    <span id="generate-content-spinner" class="loading-spinner ml-2 hidden"></span>
+                                </button>
+                                <button id="summarize-content-btn" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-sm flex items-center justify-center">
+                                    <i class="fa-solid fa-lightbulb mr-2"></i>✨ Summarize Content
+                                    <span id="summarize-content-spinner" class="loading-spinner ml-2 hidden"></span>
+                                </button>
+                                <button id="generate-questions-btn" class="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors shadow-sm flex items-center justify-center">
+                                    <i class="fa-solid fa-question-circle mr-2"></i>✨ Generate More Questions
+                                    <span id="generate-questions-spinner" class="loading-spinner ml-2 hidden"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Output -->
+                    <div class="flex flex-col bg-stone-50 p-6 rounded-lg border border-dashed border-stone-300">
+                        <h3 class="text-xl font-semibold mb-4 text-stone-700">3. Generated Content</h3>
+                        <div id="generated-content-display" class="flex-1 bg-white p-4 rounded-lg border border-stone-200 overflow-y-auto text-stone-600 leading-relaxed">
+                            <p class="text-stone-400">Your AI-generated lecture notes, questions, and visual aids will appear here...</p>
+                        </div>
+                         <div class="mt-6 flex justify-end space-x-3">
+                            <button class="bg-white border border-stone-300 text-stone-700 px-5 py-2 rounded-lg font-semibold hover:bg-stone-100">Save Draft</button>
+                            <button class="bg-green-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-green-700">Publish Lecture</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View 3: Quick View Screen -->
+            <div id="quick-view-screen" class="view">
+                <div class="flex items-center mb-6">
+                    <h2 class="text-3xl font-bold text-stone-800">Quick View</h2>
+                </div>
+
+                <p class="mb-6 text-stone-600">This section provides a concise overview of your upcoming lectures, perfect for a quick review before class. Select a lecture to see its key concepts, notes, and examples.</p>
+
+                <div class="mb-6 flex items-center bg-white p-2 rounded-lg border border-stone-200">
+                    <i class="fa-solid fa-calendar-days text-stone-400 mx-3"></i>
+                    <input type="date" id="quick-view-date-filter" class="w-full bg-transparent focus:outline-none text-stone-700" value="2025-07-25">
+                </div>
+
+                <div id="quick-view-list-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                    <!-- Quick View lecture cards will be dynamically inserted here -->
+                </div>
+
+                <div id="quick-view-detail-container" class="bg-white p-8 rounded-lg border border-stone-200 hidden">
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <h3 id="quick-view-title" class="text-2xl font-bold text-stone-800"></h3>
+                            <p id="quick-view-class" class="text-stone-500"></p>
+                        </div>
+                        <button id="start-live-assist-btn" class="bg-green-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-green-700 transition-colors shadow-sm">
+                            <i class="fa-solid fa-person-chalkboard mr-2"></i>Start Live Assist
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="text-xl font-semibold mb-3 text-stone-700">Key Concepts</h4>
+                            <ul id="quick-view-key-concepts" class="list-disc list-inside text-stone-600 space-y-1 bg-stone-50 p-4 rounded-lg border border-stone-200">
+                                <li></li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-semibold mb-3 text-stone-700">Teacher Notes / Reminders</h4>
+                            <p id="quick-view-teacher-notes" class="text-stone-600 bg-stone-50 p-4 rounded-lg border border-stone-200"></p>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-semibold mb-3 text-stone-700">Analogies & Examples</h4>
+                            <p id="quick-view-analogies" class="text-stone-600 bg-stone-50 p-4 rounded-lg border border-stone-200"></p>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-semibold mb-3 text-stone-700">Common Misconceptions</h4>
+                            <ul id="quick-view-misconceptions" class="list-disc list-inside text-stone-600 space-y-1 bg-stone-50 p-4 rounded-lg border border-stone-200">
+                                <li></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <button id="back-to-quick-view-list-btn" class="mt-8 text-stone-500 hover:text-amber-600">
+                        <i class="fa-solid fa-arrow-left mr-2"></i>Back to Quick View List
+                    </button>
+                </div>
+            </div>
+
+            <!-- View 4: Live Assist Screen -->
+            <div id="live-assist-view" class="view">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-3xl font-bold text-stone-800">Live Assist</h2>
+                        <p id="live-assist-lecture-info" class="text-stone-500">Ready for class!</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <span id="recording-status" class="text-red-500 font-semibold hidden">
+                            <i class="fa-solid fa-circle text-red-500 animate-pulse mr-1"></i> Recording...
+                        </span>
+                        <button id="toggle-record-btn" class="bg-stone-200 text-stone-700 px-4 py-2 rounded-lg font-semibold hover:bg-stone-300 transition-colors shadow-sm">
+                            <i class="fa-solid fa-video mr-2"></i>Record Class
+                        </button>
+                        <button id="end-class-btn" class="bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700 transition-colors shadow-sm">
+                            <i class="fa-solid fa-power-off mr-2"></i>End Class
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-180px)]">
+                    <!-- Main Display Area (Student View) -->
+                    <div class="lg:col-span-2 bg-white p-6 rounded-lg border border-stone-200 flex flex-col">
+                        <h3 class="text-xl font-semibold mb-4 text-stone-700">Main Display (Projected)</h3>
+                        <div id="live-assist-main-display" class="flex-1 bg-stone-100 p-6 rounded-lg border border-dashed border-stone-300 flex items-center justify-center text-center text-stone-500 text-2xl overflow-y-auto">
+                            Welcome to the class! Content will appear here.
+                        </div>
+                    </div>
+
+                    <!-- Teacher Control Panel -->
+                    <div class="lg:col-span-1 bg-white p-6 rounded-lg border border-stone-200 flex flex-col">
+                        <h3 class="text-xl font-semibold mb-4 text-stone-700">Teacher Control Panel</h3>
+                        
+                        <div class="space-y-4 flex-1 flex flex-col">
+                            <div>
+                                <label for="live-assist-prompt-input" class="block text-sm font-medium text-stone-600 mb-1">Ask GuruBandhu</label>
+                                <textarea id="live-assist-prompt-input" rows="3" placeholder="Explain this concept simply..." class="w-full p-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"></textarea>
+                            </div>
+                            <button id="live-assist-generate-btn" class="w-full bg-amber-600 text-white py-2.5 rounded-lg font-semibold hover:bg-amber-700 transition-colors shadow-sm flex items-center justify-center">
+                                <i class="fa-solid fa-robot mr-2"></i>Generate AI Response
+                                <span id="live-assist-generate-spinner" class="loading-spinner ml-2 hidden"></span>
+                            </button>
+
+                            <div class="flex-1 bg-stone-50 p-4 rounded-lg border border-dashed border-stone-300 overflow-y-auto">
+                                <h4 class="text-md font-semibold mb-2 text-stone-700">AI Response Preview</h4>
+                                <div id="live-assist-ai-response-preview" class="text-stone-600 text-sm">
+                                    AI responses will appear here before pushing.
+                                </div>
+                            </div>
+                            
+                            <button id="live-assist-push-btn" class="w-full bg-blue-600 text-white py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-sm">
+                                <i class="fa-solid fa-share-from-square mr-2"></i>Push to Display
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View 5: Class Dynamics Screen -->
+            <div id="class-dynamics-view" class="view">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-3xl font-bold text-stone-800">Class Dynamics</h2>
+                    <button id="add-new-class-btn" class="bg-amber-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-amber-700 transition-colors shadow-sm">
+                        <i class="fa-solid fa-plus mr-2"></i>Add New Class
+                    </button>
+                </div>
+
+                <p class="mb-6 text-stone-600">Manage your classes, student performance, and curriculum progress here.</p>
+
+                <div id="class-list-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                    <!-- Class cards will be dynamically inserted here -->
+                </div>
+
+                <div id="class-detail-container" class="bg-white p-8 rounded-lg border border-stone-200 hidden">
+                    <div class="flex items-center mb-6">
+                        <button id="back-to-class-list-btn" class="text-stone-500 hover:text-amber-600 mr-4">
+                            <i class="fa-solid fa-arrow-left fa-xl"></i>
+                        </button>
+                        <div>
+                            <h3 id="class-detail-name" class="text-2xl font-bold text-stone-800"></h3>
+                            <p id="class-detail-info" class="text-stone-500"></p>
+                        </div>
+                    </div>
+
+                    <div class="border-b border-stone-200 mb-6">
+                        <nav class="flex space-x-4">
+                            <button class="tab-button py-2 px-4 text-stone-600 hover:text-amber-600 active" data-tab="students">Students</button>
+                            <button class="tab-button py-2 px-4 text-stone-600 hover:text-amber-600" data-tab="topic-calendar">Topic Calendar</button>
+                            <button class="tab-button py-2 px-4 text-stone-600 hover:text-amber-600" data-tab="performance">Performance Overview</button>
+                            <button class="tab-button py-2 px-4 text-stone-600 hover:text-amber-600" data-tab="resources">Resources</button>
+                        </nav>
+                    </div>
+
+                    <div id="class-detail-content">
+                        <!-- Tab content will be dynamically loaded here -->
+                        <div id="tab-students" class="tab-content active">
+                            <h4 class="text-xl font-semibold mb-4 text-stone-700">Students in this Class</h4>
+                            <div id="student-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <!-- Student cards will be inserted here -->
+                            </div>
+                            <button class="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"><i class="fa-solid fa-user-plus mr-2"></i>Add Student</button>
+                        </div>
+
+                        <div id="tab-topic-calendar" class="tab-content hidden">
+                            <h4 class="text-xl font-semibold mb-4 text-stone-700">Topic Calendar</h4>
+                            <div id="topic-calendar-content" class="bg-stone-50 p-4 rounded-lg border border-stone-200">
+                                <p class="text-stone-600">Planned topics and their progress:</p>
+                                <ul class="list-disc list-inside mt-2 space-y-1">
+                                    <li>Week 1: Introduction to Fractions (Completed)</li>
+                                    <li>Week 2: Basic Geometry Shapes (In Progress)</li>
+                                    <li>Week 3: Short Stories in Hindi (Upcoming)</li>
+                                </ul>
+                                <button class="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"><i class="fa-solid fa-calendar-plus mr-2"></i>Manage Topics</button>
+                            </div>
+                        </div>
+
+                        <div id="tab-performance" class="tab-content hidden">
+                            <h4 class="text-xl font-semibold mb-4 text-stone-700">Performance Overview</h4>
+                            <div class="bg-stone-50 p-4 rounded-lg border border-stone-200">
+                                <p class="text-stone-600">Overall class performance metrics:</p>
+                                <div class="chart-container w-full max-w-xl mx-auto h-64 md:h-80 max-h-96 mt-4">
+                                    <canvas id="classPerformanceChart"></canvas>
+                                </div>
+                                <p class="text-sm text-stone-500 mt-2">Average score on last 3 assessments: 78%</p>
+                            </div>
+                        </div>
+
+                        <div id="tab-resources" class="tab-content hidden">
+                            <h4 class="text-xl font-semibold mb-4 text-stone-700">Class Resources</h4>
+                            <div class="bg-stone-50 p-4 rounded-lg border border-stone-200">
+                                <p class="text-stone-600">Shared documents and links for this class:</p>
+                                <ul class="list-disc list-inside mt-2 space-y-1">
+                                    <li><a href="#" class="text-blue-600 hover:underline">Grade 5 Curriculum Guide.pdf</a></li>
+                                    <li><a href="#" class="text-blue-600 hover:underline">Math Worksheets (Chapter 3).zip</a></li>
+                                </ul>
+                                <button class="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"><i class="fa-solid fa-upload mr-2"></i>Upload Resource</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const views = {
+                listView: document.getElementById('lecture-list-view'),
+                editorView: document.getElementById('lecture-editor-view'),
+                quickViewScreen: document.getElementById('quick-view-screen'),
+                liveAssistView: document.getElementById('live-assist-view'),
+                classDynamicsView: document.getElementById('class-dynamics-view')
+            };
+
+            const navLinks = {
+                dashboard: document.getElementById('nav-dashboard'),
+                lecturePrep: document.getElementById('nav-lecture-prep'),
+                quickView: document.getElementById('nav-quick-view'),
+                liveAssist: document.getElementById('nav-live-assist'),
+                postClassAnalysis: document.getElementById('nav-post-class-analysis'),
+                classDynamics: document.getElementById('nav-class-dynamics'),
+                settings: document.getElementById('nav-settings')
+            };
+
+            const createBtn = document.getElementById('create-new-lecture-btn');
+            const backToListBtn = document.getElementById('back-to-list-btn');
+            const generateBtn = document.getElementById('generate-content-btn');
+            const summarizeBtn = document.getElementById('summarize-content-btn');
+            const generateQuestionsBtn = document.getElementById('generate-questions-btn');
+
+            const searchBar = document.getElementById('search-bar');
+            const lectureListContainer = document.getElementById('lecture-list-container');
+            const generatedContentDisplay = document.getElementById('generated-content-display');
+            const contentPromptInput = document.getElementById('content-prompt');
+            const languageSelector = document.getElementById('language-selector');
+            const gradeSelector = document.getElementById('grade-selector');
+
+            const generateContentSpinner = document.getElementById('generate-content-spinner');
+            const summarizeContentSpinner = document.getElementById('summarize-content-spinner');
+            const generateQuestionsSpinner = document.getElementById('generate-questions-spinner');
+
+            const quickViewDateFilter = document.getElementById('quick-view-date-filter');
+            const quickViewListContainer = document.getElementById('quick-view-list-container');
+            const quickViewDetailContainer = document.getElementById('quick-view-detail-container');
+            const quickViewTitle = document.getElementById('quick-view-title');
+            const quickViewClass = document.getElementById('quick-view-class');
+            const quickViewKeyConcepts = document.getElementById('quick-view-key-concepts');
+            const quickViewTeacherNotes = document.getElementById('quick-view-teacher-notes');
+            const quickViewAnalogies = document.getElementById('quick-view-analogies');
+            const quickViewMisconceptions = document.getElementById('quick-view-misconceptions');
+            const startLiveAssistBtn = document.getElementById('start-live-assist-btn');
+            const backToQuickViewListBtn = document.getElementById('back-to-quick-view-list-btn');
+
+            // Live Assist elements
+            const liveAssistLectureInfo = document.getElementById('live-assist-lecture-info');
+            const liveAssistPromptInput = document.getElementById('live-assist-prompt-input');
+            const liveAssistGenerateBtn = document.getElementById('live-assist-generate-btn');
+            const liveAssistGenerateSpinner = document.getElementById('live-assist-generate-spinner');
+            const liveAssistAIResponsePreview = document.getElementById('live-assist-ai-response-preview');
+            const liveAssistPushBtn = document.getElementById('live-assist-push-btn');
+            const liveAssistMainDisplay = document.getElementById('live-assist-main-display');
+            const toggleRecordBtn = document.getElementById('toggle-record-btn');
+            const recordingStatus = document.getElementById('recording-status');
+            const endClassBtn = document.getElementById('end-class-btn');
+
+            // Class Dynamics elements
+            const addNewClassBtn = document.getElementById('add-new-class-btn');
+            const classListContainer = document.getElementById('class-list-container');
+            const classDetailContainer = document.getElementById('class-detail-container');
+            const backToClassListBtn = document.getElementById('back-to-class-list-btn');
+            const classDetailName = document.getElementById('class-detail-name');
+            const classDetailInfo = document.getElementById('class-detail-info');
+            const tabButtons = document.querySelectorAll('#class-detail-container .tab-button');
+            const tabContents = document.querySelectorAll('#class-detail-content .tab-content');
+            const studentList = document.getElementById('student-list');
+            let classPerformanceChart;
+
+
+            const mockLectures = [
+                { id: 'lec-1', title: 'The Solar System', class: 'Grade 4-5', date: '2025-07-24', status: 'Published',
+                  quickView: {
+                    keyConcepts: ['Planets in our solar system', 'Order of planets from the sun', 'Basic characteristics of each planet'],
+                    teacherNotes: 'Focus on visual aids and simple analogies. Use the "Planet Walk" activity.',
+                    analogies: 'Solar system as a family, planets as siblings orbiting their parent (sun).',
+                    misconceptions: ['All planets are hot', 'Stars are planets']
+                  }
+                },
+                { id: 'lec-2', title: 'Introduction to Photosynthesis', class: 'Grade 5', date: '2025-07-25', status: 'Published',
+                  quickView: {
+                    keyConcepts: ['What is photosynthesis', 'Ingredients: sunlight, water, CO2', 'Products: food (glucose), oxygen', 'Role of chlorophyll'],
+                    teacherNotes: 'Use the "plant kitchen" analogy. Emphasize the importance of plants.',
+                    analogies: 'Plants are like chefs, making food in their leaves using sunlight as energy.',
+                    misconceptions: ['Plants eat soil', 'Plants only need water to grow']
+                  }
+                },
+                { id: 'lec-3', title: 'Basic Hindi Grammar', class: 'Grade 3', date: '2025-07-20', status: 'Draft',
+                  quickView: {
+                    keyConcepts: ['Gender of nouns (लिंग)', 'Singular/Plural (एकवचन/बहुवचन)', 'Simple sentence structure (कर्ता-कर्म-क्रिया)'],
+                    teacherNotes: 'Interactive session with flashcards. Use common classroom objects.',
+                    analogies: 'Nouns having a "boy" or "girl" voice (gender).',
+                    misconceptions: ['All "a" ending words are feminine', 'Verb always comes at the end']
+                  }
+                },
+                { id: 'lec-4', title: 'Indian Freedom Struggle', class: 'Grade 6-8', date: '2025-07-25', status: 'Published',
+                  quickView: {
+                    keyConcepts: ['Key leaders: Gandhi, Nehru, Bose', 'Major movements: Non-Cooperation, Civil Disobedience, Quit India', 'Partition and Independence'],
+                    teacherNotes: 'Discuss the role of ordinary people. Show historical images/videos.',
+                    analogies: 'Freedom struggle as a long, difficult journey towards a goal.',
+                    misconceptions: ['Only men fought for freedom', 'Independence was achieved overnight']
+                  }
+                },
+                { id: 'lec-5', title: 'The Water Cycle', class: 'Grade 3-5', date: '2025-07-15', status: 'Draft',
+                  quickView: {
+                    keyConcepts: ['Evaporation, Condensation, Precipitation, Collection', 'Water is always moving', 'Importance of water'],
+                    teacherNotes: 'Draw a simple diagram on the board. Ask students to describe each stage.',
+                    analogies: 'Water cycle as water going on a journey, changing forms along the way.',
+                    misconceptions: ['Rain comes from clouds filling up like buckets', 'Water disappears when it evaporates']
+                  }
+                },
+                { id: 'lec-6', title: 'Local Government Bodies', class: 'Grade 7', date: '2025-07-11', status: 'Published',
+                  quickView: {
+                    keyConcepts: ['Panchayati Raj system', 'Gram Panchayat, Zila Parishad, Block Samiti', 'Functions and importance of local self-governance'],
+                    teacherNotes: 'Relate to local issues. Invite a local leader (if possible).',
+                    analogies: 'Local government as the "managers" of our village/town.',
+                    misconceptions: ['Local government has no real power', 'Only central government matters']
+                  }
+                },
+            ];
+
+            const mockClasses = [
+                {
+                    id: 'class-1',
+                    name: 'Combined Grades 3-5',
+                    gradeLevels: '3, 4, 5',
+                    numStudents: 28,
+                    students: [
+                        { name: 'Priya Sharma', grade: 4, performance: 'Good', areas: ['Math: Fractions'] },
+                        { name: 'Rahul Singh', grade: 5, performance: 'Average', areas: ['English: Reading Comprehension'] },
+                        { name: 'Anjali Devi', grade: 3, performance: 'Excellent', areas: [] },
+                        { name: 'Amit Kumar', grade: 5, performance: 'Needs Support', areas: ['Science: Water Cycle'] },
+                    ],
+                    performanceData: {
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
+                        data: [70, 75, 80, 72, 85]
+                    },
+                    resources: [
+                        { name: 'Grade 3 Math Workbook.pdf', link: '#' },
+                        { name: 'Science Experiments for Kids.zip', link: '#' }
+                    ]
+                },
+                {
+                    id: 'class-2',
+                    name: 'Grade 7',
+                    gradeLevels: '7',
+                    numStudents: 15,
+                    students: [
+                        { name: 'Sana Khan', grade: 7, performance: 'Excellent', areas: [] },
+                        { name: 'Vikram Reddy', grade: 7, performance: 'Average', areas: ['History: Mughal Empire'] },
+                    ],
+                    performanceData: {
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
+                        data: [85, 80, 88, 90, 82]
+                    },
+                    resources: [
+                        { name: 'Indian History Textbook.pdf', link: '#' },
+                        { name: 'Current Affairs Articles.zip', link: '#' }
+                    ]
+                }
+            ];
+
+            function setActiveNavLink(activeId) {
+                Object.values(navLinks).forEach(link => {
+                    link.classList.remove('bg-amber-100', 'text-amber-700', 'font-semibold');
+                    link.classList.add('text-stone-700');
+                });
+                const activeLink = document.getElementById(activeId);
+                if (activeLink) {
+                    activeLink.classList.add('bg-amber-100', 'text-amber-700', 'font-semibold');
+                    activeLink.classList.remove('text-stone-700');
+                }
+            }
+
+            function showView(viewName, navId) {
+                Object.values(views).forEach(view => view.classList.remove('active'));
+                if (views[viewName]) {
+                    views[viewName].classList.add('active');
+                }
+                setActiveNavLink(navId);
+            }
+
+            function renderLectures(lecturesToRender) {
+                lectureListContainer.innerHTML = '';
+                lecturesToRender.forEach(lecture => {
+                    const statusColor = lecture.status === 'Published' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
+                    const card = `
+                        <div class="lecture-card bg-white p-6 rounded-lg border border-stone-200 hover:shadow-md hover:border-amber-300 transition-all" data-id="${lecture.id}" data-title="${lecture.title}" data-class="${lecture.class}">
+                            <div class="flex justify-between items-start">
+                                <h4 class="text-lg font-bold text-stone-800 mb-2">${lecture.title}</h4>
+                                <span class="text-xs font-semibold px-2 py-1 rounded-full ${statusColor}">${lecture.status}</span>
+                            </div>
+                            <p class="text-stone-500 mb-1">Class: ${lecture.class}</p>
+                            <p class="text-sm text-stone-400 mb-4">Created: ${lecture.date}</p>
+                            <div class="flex space-x-2">
+                                <button class="edit-btn flex-1 text-sm text-center py-2 px-3 border border-stone-300 rounded-lg hover:bg-stone-100 font-medium">Edit</button>
+                                <button class="flex-1 text-sm text-center py-2 px-3 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 font-medium">Delete</button>
+                            </div>
+                        </div>
+                    `;
+                    lectureListContainer.insertAdjacentHTML('beforeend', card);
+                });
+                
+                document.querySelectorAll('.edit-btn').forEach(btn => {
+                    btn.addEventListener('click', () => showView('editorView', 'nav-lecture-prep'));
+                });
+            }
+
+            function renderQuickViewLectures(dateFilter = '') {
+                quickViewListContainer.innerHTML = '';
+                quickViewDetailContainer.classList.add('hidden'); // Hide detail view by default
+
+                const filteredLectures = mockLectures.filter(lecture => 
+                    lecture.status === 'Published' && (dateFilter === '' || lecture.date === dateFilter)
+                );
+
+                if (filteredLectures.length === 0) {
+                    quickViewListContainer.innerHTML = '<p class="col-span-full text-center text-stone-500">No published lectures found for this date.</p>';
+                }
+
+                filteredLectures.forEach(lecture => {
+                    const card = `
+                        <div class="quick-view-card bg-white p-6 rounded-lg border border-stone-200 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer" data-id="${lecture.id}">
+                            <h4 class="text-lg font-bold text-stone-800 mb-2">${lecture.title}</h4>
+                            <p class="text-stone-500 mb-1">Class: ${lecture.class}</p>
+                            <p class="text-sm text-stone-400">Date: ${lecture.date}</p>
+                        </div>
+                    `;
+                    quickViewListContainer.insertAdjacentHTML('beforeend', card);
+                });
+
+                document.querySelectorAll('.quick-view-card').forEach(card => {
+                    card.addEventListener('click', (event) => {
+                        const lectureId = event.currentTarget.dataset.id;
+                        const selectedLecture = mockLectures.find(lec => lec.id === lectureId);
+                        if (selectedLecture && selectedLecture.quickView) {
+                            quickViewTitle.innerText = selectedLecture.title;
+                            quickViewClass.innerText = `Class: ${selectedLecture.class}`;
+                            quickViewTeacherNotes.innerText = selectedLecture.quickView.teacherNotes;
+                            quickViewAnalogies.innerText = selectedLecture.quickView.analogies;
+
+                            quickViewKeyConcepts.innerHTML = '';
+                            selectedLecture.quickView.keyConcepts.forEach(concept => {
+                                const li = document.createElement('li');
+                                li.innerText = concept;
+                                quickViewKeyConcepts.appendChild(li);
+                            });
+
+                            quickViewMisconceptions.innerHTML = '';
+                            selectedLecture.quickView.misconceptions.forEach(misconception => {
+                                const li = document.createElement('li');
+                                li.innerText = misconception;
+                                quickViewMisconceptions.appendChild(li);
+                            });
+
+                            quickViewListContainer.classList.add('hidden');
+                            quickViewDetailContainer.classList.remove('hidden');
+
+                            // Store selected lecture info for Live Assist
+                            liveAssistLectureInfo.dataset.title = selectedLecture.title;
+                            liveAssistLectureInfo.dataset.class = selectedLecture.class;
+                        }
+                    });
+                });
+            }
+
+            function renderClassList() {
+                classListContainer.innerHTML = '';
+                classDetailContainer.classList.add('hidden'); // Hide detail view by default
+
+                if (mockClasses.length === 0) {
+                    classListContainer.innerHTML = '<p class="col-span-full text-center text-stone-500">No classes added yet.</p>';
+                }
+
+                mockClasses.forEach(cls => {
+                    const card = `
+                        <div class="class-card bg-white p-6 rounded-lg border border-stone-200 hover:shadow-md hover:border-amber-300 transition-all cursor-pointer" data-id="${cls.id}">
+                            <h4 class="text-lg font-bold text-stone-800 mb-2">${cls.name}</h4>
+                            <p class="text-stone-500 mb-1">Grades: ${cls.gradeLevels}</p>
+                            <p class="text-sm text-stone-400">Students: ${cls.numStudents}</p>
+                            <button class="view-class-details-btn mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 w-full text-center">View Details</button>
+                        </div>
+                    `;
+                    classListContainer.insertAdjacentHTML('beforeend', card);
+                });
+
+                document.querySelectorAll('.view-class-details-btn').forEach(btn => {
+                    btn.addEventListener('click', (event) => {
+                        const classId = event.target.closest('.class-card').dataset.id;
+                        const selectedClass = mockClasses.find(cls => cls.id === classId);
+                        if (selectedClass) {
+                            displayClassDetail(selectedClass);
+                        }
+                    });
+                });
+            }
+
+            function displayClassDetail(cls) {
+                classDetailName.innerText = cls.name;
+                classDetailInfo.innerText = `Grades: ${cls.gradeLevels} | Students: ${cls.numStudents}`;
+                
+                // Render students tab
+                studentList.innerHTML = '';
+                cls.students.forEach(student => {
+                    const studentCard = `
+                        <div class="bg-stone-50 p-4 rounded-lg border border-stone-200">
+                            <p class="font-semibold text-stone-700">${student.name} (Grade ${student.grade})</p>
+                            <p class="text-sm text-stone-600">Performance: ${student.performance}</p>
+                            ${student.areas.length > 0 ? `<p class="text-xs text-stone-500">Areas to focus: ${student.areas.join(', ')}</p>` : ''}
+                        </div>
+                    `;
+                    studentList.insertAdjacentHTML('beforeend', studentCard);
+                });
+
+                // Render performance chart
+                if (classPerformanceChart) {
+                    classPerformanceChart.destroy();
+                }
+                const ctx = document.getElementById('classPerformanceChart').getContext('2d');
+                classPerformanceChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: cls.performanceData.labels,
+                        datasets: [{
+                            label: 'Average Class Score (%)',
+                            data: cls.performanceData.data,
+                            borderColor: '#f59e0b',
+                            backgroundColor: 'rgba(245, 158, 11, 0.2)',
+                            tension: 0.3,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top',
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            label += context.parsed.y + '%';
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                title: {
+                                    display: true,
+                                    text: 'Score (%)'
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // Render resources
+                const resourcesList = document.querySelector('#tab-resources ul');
+                resourcesList.innerHTML = '';
+                cls.resources.forEach(res => {
+                    const li = `<li><a href="${res.link}" class="text-blue-600 hover:underline" target="_blank">${res.name}</a></li>`;
+                    resourcesList.insertAdjacentHTML('beforeend', li);
+                });
+
+
+                classListContainer.classList.add('hidden');
+                classDetailContainer.classList.remove('hidden');
+                showTab('students'); // Default to students tab
+            }
+
+            function showTab(tabName) {
+                tabContents.forEach(content => content.classList.add('hidden'));
+                tabButtons.forEach(button => button.classList.remove('active'));
+
+                document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+                document.querySelector(`.tab-button[data-tab="${tabName}"]`).classList.add('active');
+            }
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', (event) => {
+                    showTab(event.target.dataset.tab);
+                });
+            });
+
+
+            createBtn.addEventListener('click', () => {
+                document.getElementById('lecture-title').value = '';
+                document.getElementById('associated-class').value = '';
+                document.getElementById('lecture-topic').value = '';
+                document.getElementById('content-prompt').value = '';
+                generatedContentDisplay.innerHTML = '<p class="text-stone-400">Your AI-generated lecture notes, questions, and visual aids will appear here...</p>';
+                showView('editorView', 'nav-lecture-prep');
+            });
+            backToListBtn.addEventListener('click', () => showView('listView', 'nav-lecture-prep'));
+            backToQuickViewListBtn.addEventListener('click', () => {
+                quickViewDetailContainer.classList.add('hidden');
+                quickViewListContainer.classList.remove('hidden');
+            });
+            addNewClassBtn.addEventListener('click', () => alert('Add New Class functionality (under development)'));
+            backToClassListBtn.addEventListener('click', () => {
+                classDetailContainer.classList.add('hidden');
+                classListContainer.classList.remove('hidden');
+            });
+
+
+            // Navigation links
+            navLinks.dashboard.addEventListener('click', () => showView('listView', 'nav-dashboard')); // Placeholder for dashboard
+            navLinks.lecturePrep.addEventListener('click', () => showView('listView', 'nav-lecture-prep'));
+            navLinks.quickView.addEventListener('click', () => {
+                renderQuickViewLectures(quickViewDateFilter.value); // Render for current date
+                showView('quickViewScreen', 'nav-quick-view');
+            });
+            navLinks.liveAssist.addEventListener('click', () => {
+                // Clear Live Assist display and prompt when navigating directly
+                liveAssistMainDisplay.innerHTML = 'Welcome to the class! Content will appear here.';
+                liveAssistAIResponsePreview.innerHTML = 'AI responses will appear here before pushing.';
+                liveAssistPromptInput.value = '';
+                recordingStatus.classList.add('hidden');
+                toggleRecordBtn.innerText = 'Record Class';
+                showView('liveAssistView', 'nav-live-assist');
+                liveAssistLectureInfo.innerText = 'Ready for class!'; // Reset info
+            });
+            navLinks.postClassAnalysis.addEventListener('click', () => showView('listView', 'nav-post-class-analysis')); // Placeholder
+            navLinks.classDynamics.addEventListener('click', () => {
+                renderClassList();
+                showView('classDynamicsView', 'nav-class-dynamics');
+            });
+            navLinks.settings.addEventListener('click', () => showView('listView', 'nav-settings')); // Placeholder
+
+            startLiveAssistBtn.addEventListener('click', () => {
+                const lectureTitle = liveAssistLectureInfo.dataset.title || 'Untitled Lecture';
+                const lectureClass = liveAssistLectureInfo.dataset.class || 'General Class';
+                liveAssistLectureInfo.innerText = `${lectureTitle} - ${lectureClass}`;
+                liveAssistMainDisplay.innerHTML = `Welcome to the class! Today's topic: <strong>${lectureTitle}</strong>`;
+                liveAssistAIResponsePreview.innerHTML = 'AI responses will appear here before pushing.';
+                liveAssistPromptInput.value = '';
+                recordingStatus.classList.add('hidden');
+                toggleRecordBtn.innerText = 'Record Class';
+                showView('liveAssistView', 'nav-live-assist');
+            });
+
+            // Live Assist specific functionality
+            let isRecording = false;
+            toggleRecordBtn.addEventListener('click', () => {
+                isRecording = !isRecording;
+                if (isRecording) {
+                    recordingStatus.classList.remove('hidden');
+                    toggleRecordBtn.innerText = 'Pause Recording';
+                    toggleRecordBtn.classList.remove('bg-stone-200');
+                    toggleRecordBtn.classList.add('bg-orange-500', 'text-white');
+                } else {
+                    recordingStatus.classList.add('hidden');
+                    toggleRecordBtn.innerText = 'Resume Recording';
+                    toggleRecordBtn.classList.remove('bg-orange-500', 'text-white');
+                    toggleRecordBtn.classList.add('bg-stone-200', 'text-stone-700');
+                }
+            });
+
+            endClassBtn.addEventListener('click', () => {
+                alert('Class Ended! Data will be saved for Post Class Analysis. (Feature under development)');
+                isRecording = false;
+                recordingStatus.classList.add('hidden');
+                toggleRecordBtn.innerText = 'Record Class';
+                toggleRecordBtn.classList.remove('bg-orange-500', 'text-white');
+                toggleRecordBtn.classList.add('bg-stone-200', 'text-stone-700');
+                showView('listView', 'nav-dashboard'); // Go back to dashboard or lecture list
+            });
+
+            liveAssistGenerateBtn.addEventListener('click', () => {
+                const promptText = liveAssistPromptInput.value;
+                if (promptText.trim() === '') {
+                    liveAssistAIResponsePreview.innerHTML = `<p class="text-red-500">Please enter a prompt.</p>`;
+                    return;
+                }
+                const fullPrompt = `Generate a concise, student-friendly explanation or response for the following teacher query, suitable for a live classroom setting: "${promptText}"`;
+                callGeminiAPI(fullPrompt, liveAssistGenerateSpinner, liveAssistAIResponsePreview);
+            });
+
+            liveAssistPushBtn.addEventListener('click', () => {
+                const contentToPush = liveAssistAIResponsePreview.innerHTML;
+                if (contentToPush.trim() === '' || contentToPush.includes('Generating content') || contentToPush.includes('Error') || contentToPush.includes('AI responses will appear here')) {
+                    // Do nothing or show a subtle message if no valid content to push
+                    return;
+                }
+                liveAssistMainDisplay.innerHTML = contentToPush;
+            });
+
+
+            async function callGeminiAPI(prompt, spinnerElement, targetElement) {
+                spinnerElement.classList.remove('hidden');
+                targetElement.innerHTML = `<p class="text-stone-400 animate-pulse">Generating content, please wait...</p>`;
+
+                let chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                const payload = { contents: chatHistory };
+                const apiKey = "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const result = await response.json();
+
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        const text = result.candidates[0].content.parts[0].text;
+                        targetElement.innerHTML = text.replace(/\n/g, '<br>'); // Replace newlines with <br> for HTML display
+                    } else {
+                        targetElement.innerHTML = `<p class="text-red-500">Error: Could not generate content. Please try again.</p>`;
+                        console.error('Gemini API response structure unexpected:', result);
+                    }
+                } catch (error) {
+                    targetElement.innerHTML = `<p class="text-red-500">Error: Failed to connect to Gemini API. ${error.message}</p>`;
+                    console.error('Error calling Gemini API:', error);
+                } finally {
+                    spinnerElement.classList.add('hidden');
+                }
+            }
+
+            generateBtn.addEventListener('click', () => {
+                const promptText = contentPromptInput.value;
+                const language = languageSelector.value;
+                const gradeLevel = gradeSelector.value;
+                const fullPrompt = `Generate lecture notes and 2-3 worksheet questions for a ${gradeLevel} class in ${language} on the topic: "${promptText}". Format the output clearly with headings for notes and a numbered list for questions.`;
+                callGeminiAPI(fullPrompt, generateContentSpinner, generatedContentDisplay);
+            });
+
+            summarizeBtn.addEventListener('click', () => {
+                const currentContent = generatedContentDisplay.innerText;
+                if (currentContent.trim() === '' || currentContent.includes('Generating content') || currentContent.includes('Error')) {
+                    generatedContentDisplay.innerHTML = `<p class="text-red-500">Please generate content first before summarizing.</p>`;
+                    return;
+                }
+                const summaryPrompt = `Summarize the following lecture content concisely, highlighting key points:\n\n${currentContent}`;
+                callGeminiAPI(summaryPrompt, summarizeContentSpinner, generatedContentDisplay);
+            });
+
+            generateQuestionsBtn.addEventListener('click', () => {
+                const currentContent = generatedContentDisplay.innerText;
+                const gradeLevel = gradeSelector.value;
+                if (currentContent.trim() === '' || currentContent.includes('Generating content') || currentContent.includes('Error')) {
+                    generatedContentDisplay.innerHTML = `<p class="text-red-500">Please generate content first before generating questions.</p>`;
+                    return;
+                }
+                const questionsPrompt = `Based on the following lecture content, generate 3-5 additional worksheet questions suitable for a ${gradeLevel} class. Provide them as a numbered list:\n\n${currentContent}`;
+                callGeminiAPI(questionsPrompt, generateQuestionsSpinner, generatedContentDisplay);
+            });
+
+
+            searchBar.addEventListener('keyup', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                const filteredLectures = mockLectures.filter(lecture => 
+                    lecture.title.toLowerCase().includes(searchTerm) ||
+                    lecture.class.toLowerCase().includes(searchTerm)
+                );
+                renderLectures(filteredLectures);
+            });
+
+            quickViewDateFilter.addEventListener('change', (e) => {
+                renderQuickViewLectures(e.target.value);
+            });
+
+            // Initial render
+            renderLectures(mockLectures);
+            renderQuickViewLectures(quickViewDateFilter.value); // Render quick view for today's date initially
+            renderClassList(); // Render class list for Class Dynamics view
+            showView('listView', 'nav-lecture-prep'); // Set initial active view and nav link
+        });
+    </script>
+</body>
+</html>

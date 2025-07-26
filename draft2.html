@@ -1,0 +1,1799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GuruBandhu - Lecture Prep</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!--
+        Chosen Palette: Calm Harmony
+        Application Structure Plan: The SPA uses a dynamically changing left sidebar for navigation. When on the Dashboard, it shows global links. When a course is selected, the sidebar transforms to show course-specific feature tabs. The main content area dynamically switches between dashboard, course feature content, and lecture editor views. This structure allows for focused navigation based on the user's current context (global vs. course-specific).
+        Visualization & Content Choices:
+        - Report Info: Dashboard -> Goal: Overview of Courses -> Viz/Presentation: Interactive Cards -> Interaction: Click to view course details -> Justification: Cards are responsive and visually engaging.
+        - Report Info: Course Detail Screen (main content area) -> Goal: Access course-specific features -> Viz/Presentation: Content area for selected feature -> Interaction: Tabs in dynamic sidebar switch content -> Justification: Centralizes course management and provides a consistent interface.
+        - Report Info: Lecture Prep Main Screen (now within Course Detail) -> Goal: Organize/Manage -> Viz/Presentation: Interactive Cards -> Interaction: Filter, Sort, Click to Edit -> Justification: Cards are more responsive and visually engaging than a simple table, allowing for better information hierarchy on various screen sizes.
+        - Report Info: Lecture Editor Screen -> Goal: Create/Edit Content -> Viz/Presentation: Two-column layout -> Interaction: Form inputs trigger JS to simulate AI content generation -> Justification: Separating input controls (left column) from generated output (right column) creates a clear, logical workflow for the user, preventing clutter and focusing attention.
+        - Report Info: Quick View Screen (now default within Course Detail) -> Goal: Inform/Review -> Viz/Presentation: Structured text blocks with key highlights -> Interaction: Display pre-summarized content, direct link to Live Assist -> Justification: Provides a concise, scannable overview for teachers just before class, focusing on essential information without overwhelming detail.
+        - Report Info: Live Assist Screen (now within Course Detail) -> Goal: Facilitate Live Teaching -> Viz/Presentation: Dual-panel layout (Student Display + Teacher Controls) -> Interaction: Teacher inputs prompt, generates content via AI, pushes to student display, controls recording -> Justification: Clearly separates the projected content from the teacher's interactive controls, enabling real-time, dynamic lesson delivery.
+        - Report Info: Class Dynamics Screen (now within Course Detail) -> Goal: Manage Class Data -> Viz/Presentation: Class List (Cards), Detail View with Tabs -> Interaction: Click class to view details, tab navigation for sub-sections -> Justification: Provides a structured way to manage and view comprehensive data for each class, allowing teachers to drill down into specific aspects like student performance or curriculum.
+        CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
+    -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        .sidebar-icon {
+            width: 1.5rem;
+            text-align: center;
+        }
+        .main-content {
+            transition: opacity 0.3s ease-in-out;
+        }
+        .view {
+            display: none;
+        }
+        .view.active {
+            display: block;
+        }
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #f59e0b;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* Adjusted tab-button for vertical layout */
+        .tab-button {
+            padding: 10px 16px;
+            text-align: left;
+            width: 100%;
+            border-radius: 8px; /* Rounded corners for buttons */
+            transition: background-color 0.2s, color 0.2s;
+        }
+        .tab-button.active {
+            background-color: #f59e0b; /* Amber-500 for active tab */
+            color: white;
+            font-weight: 600;
+        }
+        .tab-button:hover:not(.active) {
+            background-color: #fef3c7; /* Amber-100 on hover */
+            color: #d97706; /* Amber-700 on hover */
+        }
+
+        /* Calendar styles */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            text-align: center;
+        }
+        .calendar-day {
+            padding: 8px;
+            border-radius: 4px;
+            background-color: #f8f8f8;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .calendar-day.current-month {
+            background-color: #fff;
+            border: 1px solid #e7e5e4;
+        }
+        .calendar-day.has-lecture {
+            background-color: #dcfce7; /* Green-100 */
+            border-color: #22c55e; /* Green-500 */
+            font-weight: 600;
+        }
+        .calendar-day.upcoming-lecture {
+            background-color: #fef9c3; /* Yellow-100 */
+            border-color: #eab308; /* Yellow-500 */
+            font-weight: 600;
+        }
+        .calendar-day.selected-date {
+            background-color: #f59e0b; /* Amber-500 */
+            color: white;
+            font-weight: 700;
+        }
+        .calendar-day:hover {
+            background-color: #fef3c7;
+        }
+        .calendar-header {
+            grid-column: span 7;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            font-weight: 600;
+            color: #57534e;
+        }
+        .calendar-weekday {
+            font-weight: 500;
+            color: #78716c;
+            padding-bottom: 4px;
+        }
+    </style>
+</head>
+<body class="bg-stone-50 text-stone-800">
+
+    <div class="flex h-screen">
+        <!-- Main Sidebar Navigation (Dynamic Content) -->
+        <aside id="main-sidebar" class="w-64 bg-white border-r border-stone-200 flex flex-col">
+            <!-- Content will be dynamically loaded here by renderGlobalSidebar -->
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 p-6 lg:p-8 overflow-y-auto">
+
+            <!-- View: Dashboard -->
+            <div id="dashboard-view" class="view">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-3xl font-bold text-stone-800">Dashboard</h2>
+                </div>
+                <p class="mb-6 text-stone-600">Welcome to your GuruBandhu Dashboard! Here you can find an overview of your courses.</p>
+                <div id="course-list-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Course cards will be dynamically inserted here -->
+                </div>
+            </div>
+
+            <!-- View: Course Detail Content Area (no longer has its own aside) -->
+            <div id="course-detail-view" class="view">
+                <div id="course-feature-content">
+                    <!-- Dynamic content for selected course feature will load here -->
+                    <!-- Quick View content will be loaded by default -->
+                </div>
+            </div>
+
+            <!-- View: Lecture Editor Screen (remains a top-level view for editing) -->
+            <div id="lecture-editor-view" class="view">
+                <div class="flex items-center mb-6">
+                    <button id="back-to-list-btn" class="text-stone-500 hover:text-amber-600 mr-4">
+                        <i class="fa-solid fa-arrow-left fa-xl"></i>
+                    </button>
+                    <div>
+                        <h2 class="text-3xl font-bold text-stone-800">Lecture Editor</h2>
+                        <p class="text-stone-500">Create and refine your lesson materials.</p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-8 rounded-lg border border-stone-200 grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Left Column: Inputs -->
+                    <div class="flex flex-col space-y-6">
+                        <div>
+                            <h3 class="text-xl font-semibold mb-4 text-stone-700">1. Lecture Details</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="lecture-title" class="block text-sm font-medium text-stone-600 mb-1">Lecture Title</label>
+                                    <input type="text" id="lecture-title" placeholder="e.g., The Water Cycle" class="w-full p-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
+                                </div>
+                                <div>
+                                    <label for="associated-class" class="block text-sm font-medium text-stone-600 mb-1">Associated Class(es)</label>
+                                    <input type="text" id="associated-class" placeholder="e.g., Grade 3-5 Combined" class="w-full p-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
+                                </div>
+                                <div>
+                                    <label for="lecture-topic" class="block text-sm font-medium text-stone-600 mb-1">Topic</label>
+                                    <input type="text" id="lecture-topic" placeholder="e.g., Environmental Science" class="w-full p-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="text-xl font-semibold mb-4 text-stone-700">2. Content Generation</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="content-prompt" class="block text-sm font-medium text-stone-600 mb-1">Prompt</label>
+                                    <textarea id="content-prompt" rows="4" placeholder="Explain photosynthesis to 5th graders in Hindi..." class="w-full p-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"></textarea>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="language-selector" class="block text-sm font-medium text-stone-600 mb-1">Language</label>
+                                        <select id="language-selector" class="w-full p-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
+                                            <option>Hindi</option>
+                                            <option>Bengali</option>
+                                            <option>Marathi</option>
+                                            <option>Telugu</option>
+                                            <option>Tamil</option>
+                                            <option>English</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="grade-selector" class="block text-sm font-medium text-stone-600 mb-1">Grade Level</label>
+                                        <select id="grade-selector" class="w-full p-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
+                                            <option>Grades 1-2</option>
+                                            <option>Grades 3-5</option>
+                                            <option>Grades 6-8</option>
+                                            <option>Grades 9-10</option>
+                                            <option>Grades 11-12</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button class="flex-1 text-sm text-center py-2 px-3 border border-stone-300 rounded-lg hover:bg-stone-100"><i class="fa-solid fa-camera mr-2"></i>Upload Photo</button>
+                                    <button class="flex-1 text-sm text-center py-2 px-3 border border-stone-300 rounded-lg hover:bg-stone-100"><i class="fa-solid fa-file-lines mr-2"></i>Upload Material</button>
+                                </div>
+                                <button id="generate-content-btn" class="w-full bg-amber-600 text-white py-3 rounded-lg font-semibold hover:bg-amber-700 transition-colors shadow-sm flex items-center justify-center">
+                                    <i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Generate Content
+                                    <span id="generate-content-spinner" class="loading-spinner ml-2 hidden"></span>
+                                </button>
+                                <button id="summarize-content-btn" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-sm flex items-center justify-center">
+                                    <i class="fa-solid fa-lightbulb mr-2"></i>✨ Summarize Content
+                                    <span id="summarize-content-spinner" class="loading-spinner ml-2 hidden"></span>
+                                </button>
+                                <button id="generate-questions-btn" class="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors shadow-sm flex items-center justify-center">
+                                    <i class="fa-solid fa-question-circle mr-2"></i>✨ Generate More Questions
+                                    <span id="generate-questions-spinner" class="loading-spinner ml-2 hidden"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Output -->
+                    <div class="flex flex-col bg-stone-50 p-6 rounded-lg border border-dashed border-stone-300">
+                        <h3 class="text-xl font-semibold mb-4 text-stone-700">3. Generated Content</h3>
+                        <div id="generated-content-display" class="flex-1 bg-white p-4 rounded-lg border border-stone-200 overflow-y-auto text-stone-600 leading-relaxed">
+                            <p class="text-stone-400">Your AI-generated lecture notes, questions, and visual aids will appear here...</p>
+                        </div>
+                           <div class="mt-6 flex justify-end space-x-3">
+                            <button id="save-draft-btn" class="bg-white border border-stone-300 text-stone-700 px-5 py-2 rounded-lg font-semibold hover:bg-stone-100">Save Draft</button>
+                            <button id="publish-lecture-btn" class="bg-green-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-green-700">Publish Lecture</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        let app;
+        let db;
+        let auth;
+        let userId;
+        let appId;
+        let lectures = []; // Will be populated with dummy data initially
+        let classes = []; // Will be populated with dummy data initially
+        let currentLectureId = null;
+        let currentCourseId = null;
+        let currentCourseData = null; // Store full course data for easy access
+        let classPerformanceChart;
+        let currentQuickViewDate = new Date(); // Track the currently selected date for Quick View calendar
+
+        // --- Dummy Data Definitions ---
+        const dummyCourses = [
+            { id: 'c1', subject: 'Mathematics', grade: 'Grades 3-5', name: 'Math Fundamentals', description: 'Fundamental concepts of arithmetic and geometry.', schedule: 'TTS 2:00-3:00 PM' },
+            { id: 'c2', subject: 'Science', grade: 'Grades 6-8', name: 'Advanced Science', description: 'Exploring the natural world: physics, chemistry, biology basics.', schedule: 'MWF 10:00-11:00 AM' },
+            { id: 'c3', subject: 'Language Arts', grade: 'Grades 1-2', name: 'Beginner Language Arts', description: 'Introduction to reading, writing, and storytelling.', schedule: 'TTS 9:00-10:00 AM' },
+            { id: 'c4', subject: 'Social Studies', grade: 'Grades 9-10', name: 'World History', description: 'History, geography, and civics for advanced learners.', schedule: 'MWF 1:00-2:00 PM' },
+            { id: 'c5', subject: 'Computer Science', grade: 'Grades 6-8', name: 'Intro to Programming', description: 'Introduction to programming and digital literacy.', schedule: 'TTS 11:00-12:00 PM' }
+        ];
+
+        const dummyLectures = [
+            // Lectures for Math Fundamentals (c1)
+            {
+                id: 'l101', courseId: 'c1', title: 'Understanding Fractions', associatedClass: 'Grade 4 Math Group A', topic: 'Fractions',
+                prompt: 'Explain fractions to 4th graders.', language: 'English', grade: 'Grades 3-5', status: 'Published',
+                dateCreated: '2025-07-25T10:00:00Z', lastModified: '2025-07-25T10:30:00Z',
+                generatedContent: `<h3>What are Fractions?</h3><p>Fractions are parts of a whole! Imagine you have a delicious pizza. If you cut it into 8 equal slices and eat 3 of them, you've eaten 3/8 of the pizza. The top number (numerator) tells you how many parts you have, and the bottom number (denominator) tells you how many equal parts make up the whole.</p><h4>Practice Questions:</h4><ol><li>If a cake is cut into 6 equal pieces and you eat 2, what fraction did you eat?</li><li>Draw a circle and shade 1/4 of it.</li></ol>`,
+                keyConcepts: [
+                    { name: 'Part of a whole', info: 'Fractions represent a portion of a larger quantity.' },
+                    { name: 'Numerator (top number)', info: 'Indicates how many parts you are considering.' },
+                    { name: 'Denominator (bottom number)', info: 'Indicates the total number of equal parts in the whole.' },
+                    { name: 'Equal parts', info: 'Crucial for understanding fractions correctly; all parts must be of the same size.' }
+                ],
+                teacherNotes: 'Use visual aids like pizza or pie charts. Emphasize "equal parts."',
+                analogies: 'Pizza slices, chocolate bar squares, parts of a team.',
+                misconceptions: ['Thinking 1/2 is smaller than 1/4 because 2 is smaller than 4.', 'Not understanding that parts must be equal.']
+            },
+            {
+                id: 'l102', courseId: 'c1', title: 'Basic Geometry Shapes', associatedClass: 'Grade 3 Math Group B', topic: 'Geometry',
+                prompt: 'Introduce basic 2D shapes to 3rd graders.', language: 'English', grade: 'Grades 3-5', status: 'Upcoming', // Changed to Upcoming
+                dateCreated: '2025-07-28T09:00:00Z', lastModified: '2025-07-26T09:15:00Z', // Future date
+                generatedContent: `<h3>Meet the Shapes!</h3><p>Today we'll learn about flat shapes like squares, circles, triangles, and rectangles. Each one has special features!</p><ul><li><b>Square:</b> 4 equal sides, 4 corners.</li><li><b>Circle:</b> Round, no sides, no corners.</li><li><b>Triangle:</b> 3 sides, 3 corners.</li><li><b>Rectangle:</b> 4 sides, 4 corners, opposite sides are equal.</li></ul>`,
+                keyConcepts: [
+                    { name: 'Square', info: 'Four equal sides and four right angles.' },
+                    { name: 'Circle', info: 'A round shape with no corners or straight sides.' },
+                    { name: 'Triangle', info: 'Three sides and three angles.' },
+                    { name: 'Rectangle', info: 'Four sides and four right angles, with opposite sides equal.' }
+                ],
+                teacherNotes: 'Have physical cut-outs of shapes for students to touch and sort.',
+                analogies: 'Windows are rectangles, wheels are circles.',
+                misconceptions: ['Confusing squares and rectangles.', 'Thinking a tilted square is not a square.']
+            },
+            // Lectures for Advanced Science (c2)
+            {
+                id: 'l201', courseId: 'c2', title: 'Photosynthesis Explained', associatedClass: 'Grade 7 Science Club', topic: 'Biology',
+                prompt: 'Explain photosynthesis to middle schoolers.', language: 'English', grade: 'Grades 6-8', status: 'Published',
+                dateCreated: '2025-07-25T11:00:00Z', lastModified: '2025-07-25T11:45:00Z',
+                generatedContent: `<h3>Photosynthesis: How Plants Make Food</h3><p>Photosynthesis is the amazing process where plants use sunlight, water, and carbon dioxide to create their own food (glucose) and release oxygen. It's like a tiny food factory inside every green leaf!</p><p><b>Equation:</b> Sunlight + Water + Carbon Dioxide $\\rightarrow$ Glucose + Oxygen</p>`,
+                keyConcepts: [
+                    { name: 'Sunlight', info: 'The primary energy source for the process.' },
+                    { name: 'Water', info: 'Absorbed by roots, a key reactant.' },
+                    { name: 'Carbon Dioxide', info: 'Taken from the air, another key reactant.' },
+                    { name: 'Glucose', info: 'The sugar (food) produced by the plant.' },
+                    { name: 'Oxygen', info: 'A byproduct released into the atmosphere.' },
+                    { name: 'Chlorophyll', info: 'Green pigment that captures sunlight.' },
+                    { name: 'Chloroplasts', info: 'Organelles in plant cells where photosynthesis occurs.' }
+                ],
+                teacherNotes: 'Discuss the importance of photosynthesis for all life on Earth.',
+                analogies: 'Plants are like chefs, sunlight is the energy for cooking.',
+                misconceptions: ['Plants eat soil.', 'Photosynthesis only happens during the day.']
+            },
+            {
+                id: 'l202', courseId: 'c2', title: 'The Water Cycle', associatedClass: 'Grade 6 Earth Science', topic: 'Earth Science',
+                prompt: 'Describe the water cycle for 6th graders.', language: 'English', grade: 'Grades 6-8', status: 'Published',
+                dateCreated: '2025-07-24T14:00:00Z', lastModified: '2025-07-24T14:30:00Z',
+                generatedContent: `<h3>The Never-Ending Journey of Water</h3><p>The water cycle describes how water moves around Earth, changing states from liquid to gas to solid. Key stages include evaporation (water turns to vapor), condensation (vapor forms clouds), precipitation (rain, snow, hail), and collection (water gathers in rivers, lakes, oceans).</p>`,
+                keyConcepts: [
+                    { name: 'Evaporation', info: 'Liquid water turning into water vapor (gas).' },
+                    { name: 'Condensation', info: 'Water vapor cooling and forming liquid droplets (clouds).' },
+                    { name: 'Precipitation', info: 'Water falling back to Earth as rain, snow, or hail.' },
+                    { name: 'Collection', info: 'Water accumulating in bodies of water or underground.' },
+                    { name: 'States of water', info: 'Solid (ice), Liquid (water), Gas (vapor).' }
+                ],
+                teacherNotes: 'Use a diagram of the water cycle. Connect to local weather patterns.',
+                analogies: 'Water is like a traveler on a continuous journey.',
+                misconceptions: ['Clouds are made of steam.', 'Water disappears when it evaporates.']
+            },
+            // Lectures for Beginner Language Arts (c3)
+            {
+                id: 'l301', courseId: 'c3', title: 'Storytelling Basics', associatedClass: 'Grade 2 Reading Circle', topic: 'Creative Writing',
+                prompt: 'Teach simple storytelling to 1st graders.', language: 'English', grade: 'Grades 1-2', status: 'Published',
+                dateCreated: '2025-07-25T09:30:00Z', lastModified: '2025-07-25T09:50:00Z',
+                generatedContent: `<h3>Let's Tell a Story!</h3><p>Every good story has a beginning, a middle, and an end. It also has characters (who is in the story?) and a setting (where does it happen?).</p><ul><li><b>Beginning:</b> Introduce characters and setting.</li><li><b>Middle:</b> What happens? The adventure!</li><li><b>End:</b> How does the story finish?</li></ul>`,
+                keyConcepts: [
+                    { name: 'Beginning', info: 'Introduces characters, setting, and the initial situation.' },
+                    { name: 'Middle', info: 'Where the main events and conflicts happen.' },
+                    { name: 'End', info: 'The resolution of the story and how things conclude.' },
+                    { name: 'Characters', info: 'The people or animals in the story.' },
+                    { name: 'Setting', info: 'Where and when the story takes place.' },
+                    { name: 'Plot', info: 'The sequence of events in a story.' }
+                ],
+                teacherNotes: 'Encourage students to draw their stories first. Use simple prompts.',
+                analogies: 'A story is like a journey with a start, a path, and a destination.',
+                misconceptions: ['A story has to be very long.', 'Only famous people can write stories.']
+            }
+        ];
+
+        const dummyClasses = [
+            // Classes for Math Fundamentals (c1)
+            {
+                id: 'cl101', courseId: 'c1', name: 'Grade 4 Math Group A', gradeRange: 'Grade 4',
+                students: [
+                    { name: 'Aarav Sharma', grade: 4, attendance: 'Present', performance: 75 },
+                    { name: 'Priya Singh', grade: 4, attendance: 'Present', performance: 82 },
+                    { name: 'Rohan Gupta', grade: 4, attendance: 'Absent', performance: 60 }
+                ],
+                topicCalendar: [
+                    { week: 'Week 1', name: 'Number Sense', status: 'Completed', date: '2025-07-10' },
+                    { week: 'Week 2', name: 'Fractions Introduction', status: 'Completed', date: '2025-07-17' },
+                    { week: 'Week 3', name: 'Decimal Basics', status: 'In Progress', date: '2025-07-24' }
+                ],
+                performanceData: { labels: ['Quiz 1', 'Quiz 2', 'Midterm'], data: [75, 82, 79] },
+                evaluationData: 'Students show good grasp of basic arithmetic, but some struggle with complex word problems.',
+                resources: [
+                    { name: 'Grade 4 Math Textbook PDF', type: 'data file', url: '#' },
+                    { name: 'Fraction Worksheets', type: 'worksheet', url: '#' },
+                    { name: 'Teacher Notes - Chapter 3', type: 'notes', url: '#' }
+                ]
+            },
+            // Classes for Advanced Science (c2)
+            {
+                id: 'cl201', courseId: 'c2', name: 'Grade 7 Science Club', gradeRange: 'Grade 7',
+                students: [
+                    { name: 'Sneha Reddy', grade: 7, attendance: 'Present', performance: 88 },
+                    { name: 'Vikram Kumar', grade: 7, attendance: 'Present', performance: 72 },
+                    { name: 'Anjali Das', grade: 7, attendance: 'Present', performance: 91 },
+                    { name: 'Rahul Verma', grade: 7, attendance: 'Present', performance: 85 }
+                ],
+                topicCalendar: [
+                    { week: 'Week 1', name: 'Ecosystems', status: 'Completed', date: '2025-07-08' },
+                    { week: 'Week 2', name: 'Photosynthesis Deep Dive', status: 'In Progress', date: '2025-07-25' },
+                    { week: 'Week 3', name: 'Human Body Systems', status: 'Upcoming', date: '2025-08-01' }
+                ],
+                performanceData: { labels: ['Lab Report 1', 'Quiz 1', 'Project'], data: [88, 72, 91] },
+                evaluationData: 'Students are highly engaged in experiments, but need more practice with scientific writing.',
+                resources: [
+                    { name: 'Science Club Handbook', type: 'data file', url: '#' },
+                    { name: 'Photosynthesis Diagram', type: 'worksheet', url: '#' },
+                    { name: 'Experiment Safety Guidelines', type: 'notes', url: '#' }
+                ]
+            },
+            // Classes for Beginner Language Arts (c3)
+            {
+                id: 'cl301', courseId: 'c3', name: 'Grade 2 Reading Circle', gradeRange: 'Grade 2',
+                students: [
+                    { name: 'Diya Singh', grade: 2, attendance: 'Present', performance: 92 },
+                    { name: 'Aryan Patel', grade: 2, attendance: 'Present', performance: 85 }
+                ],
+                topicCalendar: [
+                    { week: 'Week 1', name: 'Alphabet & Phonics', status: 'Completed', date: '2025-07-05' },
+                    { week: 'Week 2', name: 'Short Vowels', status: 'Completed', date: '2025-07-12' },
+                    { week: 'Week 3', name: 'Story Elements', status: 'In Progress', date: '2025-07-19' }
+                ],
+                performanceData: { labels: ['Reading Test 1', 'Spelling Quiz'], data: [92, 85] },
+                evaluationData: 'Students are progressing well in reading fluency; focus on comprehension strategies next.',
+                resources: [
+                    { name: 'Beginner Readers List', type: 'data file', url: '#' },
+                    { name: 'Story Writing Prompts', type: 'worksheet', url: '#' }
+                ]
+            }
+        ];
+
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                
+                // Firebase configuration - using a demo config for local testing
+                const firebaseConfig = {
+                    apiKey: "demo-api-key",
+                    authDomain: "demo-project.firebaseapp.com",
+                    projectId: "demo-project",
+                    storageBucket: "demo-project.appspot.com",
+                    messagingSenderId: "123456789",
+                    appId: "demo-app-id"
+                };
+                
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                // Try to authenticate, but don't fail if it doesn't work
+                try {
+                    if (typeof __initial_auth_token !== 'undefined') {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                } catch (authError) {
+                    console.log("Firebase authentication failed, using demo mode:", authError);
+                    // Continue with demo mode
+                }
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        console.log("Firebase initialized. User ID:", userId);
+                    } else {
+                        console.log("No user signed in, using demo mode.");
+                        userId = 'demo-user-id'; // Use a demo user ID
+                    }
+                    
+                    // For demonstration, we'll use dummy data initially.
+                    // In a real app, you'd fetch from Firestore here:
+                    // fetchLectures();
+                    // fetchClasses();
+                    // Populate with dummy data for immediate display
+                    lectures = dummyLectures;
+                    classes = dummyClasses;
+
+                    // Re-render current view to ensure dummy data is displayed
+                    const currentViewId = Object.keys(views).find(key => views[key] && views[key].classList.contains('active'));
+                    if (currentViewId) {
+                        showView(currentViewId, currentCourseData);
+                    } else {
+                        showView('dashboard-view'); // Default if no view is active
+                    }
+                });
+
+            } catch (error) {
+                console.error("Error initializing Firebase:", error);
+                console.log("Continuing in demo mode without Firebase...");
+                
+                // Set up demo mode
+                userId = 'demo-user-id';
+                lectures = dummyLectures;
+                classes = dummyClasses;
+            }
+
+            const views = {
+                dashboardView: document.getElementById('dashboard-view'),
+                courseDetailView: document.getElementById('course-detail-view'),
+                lectureEditorView: document.getElementById('lecture-editor-view')
+            };
+
+            const mainSidebar = document.getElementById('main-sidebar');
+
+            // Lecture Editor elements (moved here for global access)
+            const lectureTitleInput = document.getElementById('lecture-title');
+            const associatedClassInput = document.getElementById('associated-class');
+            const lectureTopicInput = document.getElementById('lecture-topic');
+            const contentPromptInput = document.getElementById('content-prompt');
+            const languageSelector = document.getElementById('language-selector');
+            const gradeSelector = document.getElementById('grade-selector');
+            const generatedContentDisplay = document.getElementById('generated-content-display');
+            const generateContentSpinner = document.getElementById('generate-content-spinner');
+            const summarizeContentSpinner = document.getElementById('summarize-content-spinner');
+            const generateQuestionsSpinner = document.getElementById('generate-questions-spinner');
+            const saveDraftBtn = document.getElementById('save-draft-btn');
+            const publishLectureBtn = document.getElementById('publish-lecture-btn');
+            const backToListBtn = document.getElementById('back-to-list-btn');
+
+            // --- Global Sidebar Rendering ---
+            function renderGlobalSidebar(type, data = null) {
+                mainSidebar.innerHTML = ''; // Clear existing content
+
+                if (type === 'dashboard') {
+                    mainSidebar.innerHTML = `
+                        <div class="p-6 border-b border-stone-200">
+                            <h1 class="text-2xl font-bold text-amber-600">GuruBandhu</h1>
+                            <p class="text-sm text-stone-500">For Multi-Grade Classrooms</p>
+                        </div>
+                        <nav class="flex-1 p-4 space-y-2">
+                            <a href="#" id="nav-dashboard" class="flex items-center px-4 py-2 text-stone-700 rounded-lg hover:bg-amber-50 hover:text-amber-700">
+                                <i class="fa-solid fa-house-chimney sidebar-icon mr-3"></i> Dashboard
+                            </a>
+                        </nav>
+                        <div class="p-4 border-t border-stone-200">
+                            <a href="#" id="nav-settings" class="flex items-center px-4 py-2 text-stone-700 rounded-lg hover:bg-stone-100">
+                                <i class="fa-solid fa-gear sidebar-icon mr-3"></i> Settings
+                            </a>
+                        </div>
+                    `;
+                    const navDashboard = document.getElementById('nav-dashboard');
+                    const navSettings = document.getElementById('nav-settings');
+
+                    if (navDashboard) {
+                        navDashboard.addEventListener('click', () => showView('dashboard-view'));
+                        navDashboard.classList.add('bg-amber-50', 'text-amber-700');
+                        navDashboard.classList.remove('text-stone-700');
+                    }
+                    if (navSettings) {
+                        navSettings.addEventListener('click', () => alert('Settings coming soon!'));
+                    }
+
+                } else if (type === 'course-features' && data) {
+                    mainSidebar.innerHTML = `
+                        <button id="back-to-dashboard-btn" class="flex items-center px-4 py-2 text-stone-500 hover:text-amber-600 rounded-lg">
+                            <i class="fa-solid fa-arrow-left mr-3"></i> Back to Dashboard
+                        </button>
+                        <div class="p-4 border-b border-stone-200">
+                            <h2 id="course-detail-title" class="text-2xl font-bold text-stone-800 mb-1">${data.name || data.subject}</h2>
+                            <p id="course-detail-description" class="text-sm text-stone-500">${data.subject} | ${data.grade} | ${data.description}</p>
+                            <p class="text-sm text-stone-500"><i class="fa-regular fa-calendar-days mr-1"></i> ${data.schedule}</p>
+                        </div>
+                        <nav id="course-feature-tabs" class="flex-1 flex flex-col space-y-2 mt-4">
+                            <button class="tab-button py-2 px-4 text-stone-700 hover:bg-amber-50 hover:text-amber-700" data-feature="quick-view">
+                                <i class="fa-solid fa-bolt sidebar-icon mr-3"></i> Quick View
+                            </button>
+                            <button class="tab-button py-2 px-4 text-stone-700 hover:bg-amber-50 hover:text-amber-700" data-feature="knowledge-bank">
+                                <i class="fa-solid fa-book-open-reader sidebar-icon mr-3"></i> Knowledge Bank
+                            </button>
+                            <button class="tab-button py-2 px-4 text-stone-700 hover:bg-amber-50 hover:text-amber-700" data-feature="live-assist">
+                                <i class="fa-solid fa-person-chalkboard sidebar-icon mr-3"></i> Live Assist
+                            </button>
+                            <button class="tab-button py-2 px-4 text-stone-700 hover:bg-amber-50 hover:text-amber-700" data-feature="class-dynamics">
+                                <i class="fa-solid fa-users sidebar-icon mr-3"></i> Class Dynamics
+                            </button>
+                            <button class="tab-button py-2 px-4 text-stone-700 hover:bg-amber-50 hover:text-amber-700" data-feature="insights">
+                                <i class="fa-solid fa-lightbulb sidebar-icon mr-3"></i> Insights
+                            </button>
+                        </nav>
+                    `;
+                    const backToDashboardBtn = document.getElementById('back-to-dashboard-btn');
+                    if (backToDashboardBtn) {
+                        backToDashboardBtn.addEventListener('click', () => showView('dashboard-view'));
+                    }
+
+                    const courseFeatureTabs = document.getElementById('course-feature-tabs');
+                    if (courseFeatureTabs) {
+                        courseFeatureTabs.querySelectorAll('.tab-button').forEach(button => {
+                            button.addEventListener('click', (e) => {
+                                showCourseSubFeature(e.currentTarget.dataset.feature);
+                            });
+                        });
+                    }
+                }
+            }
+
+            // --- View Management ---
+            function showView(viewId, data = null) {
+                Object.values(views).forEach(view => {
+                    if (view) {
+                        view.classList.remove('active');
+                    }
+                });
+                const targetView = document.getElementById(viewId);
+                if (targetView) {
+                    targetView.classList.add('active');
+                }
+
+                if (viewId === 'dashboard-view') {
+                    renderGlobalSidebar('dashboard');
+                    renderCourses();
+                } else if (viewId === 'course-detail-view') {
+                    currentCourseId = data ? data.id : null;
+                    currentCourseData = data;
+                    renderGlobalSidebar('course-features', data);
+                    showCourseSubFeature('quick-view'); // Default to Quick View
+                } else if (viewId === 'lecture-editor-view') {
+                    if (data) {
+                        populateLectureEditor(data);
+                    } else {
+                        clearLectureEditor();
+                        if (currentCourseData) {
+                            associatedClassInput.value = currentCourseData.name;
+                        }
+                    }
+                }
+            }
+
+            // --- Dashboard View Functions ---
+            function renderCourses() {
+                const courseListContainer = document.getElementById('course-list-container');
+                courseListContainer.innerHTML = '';
+                dummyCourses.forEach(course => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-white p-6 rounded-lg border border-stone-200 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between cursor-pointer course-card';
+                    card.dataset.id = course.id;
+                    card.innerHTML = `
+                        <div>
+                            <h3 class="text-xl font-semibold text-stone-800 mb-2">${course.subject} - ${course.name}</h3>
+                            <p class="text-stone-600 text-sm mb-1"><i class="fa-solid fa-graduation-cap mr-2 text-amber-600"></i>${course.grade}</p>
+                            <p class="text-stone-500 text-xs mt-2"><i class="fa-regular fa-calendar-days mr-1"></i> ${course.schedule}</p>
+                            <p class="text-stone-500 text-xs mt-1">${course.description}</p>
+                        </div>
+                    `;
+                    courseListContainer.appendChild(card);
+                });
+
+                document.querySelectorAll('.course-card').forEach(card => {
+                    card.addEventListener('click', (e) => {
+                        const courseId = e.currentTarget.dataset.id;
+                        const selectedCourse = dummyCourses.find(c => c.id === courseId);
+                        if (selectedCourse) {
+                            showView('course-detail-view', selectedCourse);
+                        }
+                    });
+                });
+            }
+
+            // --- Course Detail View Functions (now primarily content rendering) ---
+            function populateLectureEditor(lecture) {
+                if (lecture) {
+                    lectureTitleInput.value = lecture.title || '';
+                    associatedClassInput.value = lecture.associatedClass || '';
+                    lectureTopicInput.value = lecture.topic || '';
+                    contentPromptInput.value = lecture.prompt || '';
+                    languageSelector.value = lecture.language || 'English';
+                    gradeSelector.value = lecture.grade || 'Grades 3-5';
+                    generatedContentDisplay.innerHTML = lecture.generatedContent || '<p class="text-stone-400">Your AI-generated lecture notes, questions, and visual aids will appear here...</p>';
+                }
+            }
+
+            function clearLectureEditor() {
+                lectureTitleInput.value = '';
+                associatedClassInput.value = '';
+                lectureTopicInput.value = '';
+                contentPromptInput.value = '';
+                languageSelector.value = 'English';
+                gradeSelector.value = 'Grades 3-5';
+                generatedContentDisplay.innerHTML = '<p class="text-stone-400">Your AI-generated lecture notes, questions, and visual aids will appear here...</p>';
+                currentLectureId = null;
+            }
+
+            async function handleContentGeneration(type) {
+                const prompt = contentPromptInput.value;
+                const language = languageSelector.value;
+                const grade = gradeSelector.value;
+                let spinner;
+                let apiPrompt = '';
+
+                if (!prompt) {
+                    alert('Please enter a prompt for content generation.');
+                    return;
+                }
+
+                if (type === 'content') {
+                    spinner = generateContentSpinner;
+                    apiPrompt = `Generate comprehensive lecture notes for a ${grade} class in ${language} based on the following topic/prompt: "${prompt}". Include key concepts, explanations, and simple examples.`;
+                } else if (type === 'summarize') {
+                    spinner = summarizeContentSpinner;
+                    const existingContent = generatedContentDisplay.innerText.trim();
+                    if (!existingContent || existingContent.includes('Your AI-generated lecture notes')) {
+                        alert('Please generate some content first to summarize.');
+                        return;
+                    }
+                    apiPrompt = `Summarize the following lecture content for a ${grade} class in ${language}. Focus on key takeaways and make it concise: "${existingContent}"`;
+                } else if (type === 'questions') {
+                    spinner = generateQuestionsSpinner;
+                    const existingContent = generatedContentDisplay.innerText.trim();
+                    if (!existingContent || existingContent.includes('Your AI-generated lecture notes')) {
+                        alert('Please generate some content first to create questions from.');
+                        return;
+                    }
+                    apiPrompt = `Generate 3-5 multiple-choice questions (with options A, B, C, D and correct answer indicated) and 2-3 short-answer questions for a ${grade} class in ${language} based on the following lecture content: "${existingContent}"`;
+                }
+
+                spinner.classList.remove('hidden');
+                generatedContentDisplay.innerHTML = `<p class="text-stone-500">GuruBandhu is thinking...</p>`;
+
+                try {
+                    let chatHistory = [];
+                    chatHistory.push({ role: "user", parts: [{ text: apiPrompt }] });
+                    const payload = { contents: chatHistory };
+                    const apiKey = "";
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const result = await response.json();
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        const text = result.candidates[0].content.parts[0].text;
+                        generatedContentDisplay.innerHTML = `<p>${text.replace(/\n/g, '<br>')}</p>`;
+                    } else {
+                        generatedContentDisplay.innerHTML = '<p class="text-red-500">Error: Could not generate content. Please try again.</p>';
+                        console.error("Unexpected API response structure:", result);
+                    }
+                } catch (error) {
+                    console.error("Error calling Gemini API:", error);
+                    generatedContentDisplay.innerHTML = '<p class="text-red-500">Error: Failed to connect to AI service. Please check your network or try again later.</p>';
+                } finally {
+                    spinner.classList.add('hidden');
+                }
+            }
+
+
+            function showCourseSubFeature(featureName, lectureData = null) {
+                const courseFeatureTabs = document.getElementById('course-feature-tabs');
+                if (!courseFeatureTabs) return;
+
+                courseFeatureTabs.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                const activeTabButton = courseFeatureTabs.querySelector(`.tab-button[data-feature="${featureName}"]`);
+                if (activeTabButton) {
+                    activeTabButton.classList.add('active');
+                }
+
+                const courseFeatureContent = document.getElementById('course-feature-content');
+                courseFeatureContent.innerHTML = '';
+
+                if (featureName === 'quick-view') {
+                    renderQuickViewContent();
+                } else if (featureName === 'knowledge-bank') { // Renamed from lecture-prep
+                    renderKnowledgeBankContent();
+                } else if (featureName === 'live-assist') {
+                    renderLiveAssistContent(lectureData);
+                } else if (featureName === 'class-dynamics') {
+                    renderClassDynamicsContent();
+                } else if (featureName === 'insights') {
+                    renderInsightsContent();
+                }
+            }
+
+            // --- Firebase Data Operations (modified to use dummy data initially) ---
+            async function fetchLectures() {
+                if (!userId) {
+                    console.log("User not authenticated yet, cannot fetch lectures.");
+                    return;
+                }
+                // In a real application, you would uncomment the Firestore query:
+                /*
+                const q = query(collection(db, `artifacts/${appId}/users/${userId}/lectures`));
+                onSnapshot(q, (snapshot) => {
+                    lectures = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    console.log("Lectures fetched:", lectures);
+                    if (views.courseDetailView.classList.contains('active')) {
+                        const courseFeatureTabs = document.getElementById('course-feature-tabs');
+                        if (courseFeatureTabs) {
+                            const activeTab = courseFeatureTabs.querySelector('.tab-button.active');
+                            if (activeTab && (activeTab.dataset.feature === 'knowledge-bank' || activeTab.dataset.feature === 'quick-view')) {
+                                showCourseSubFeature(activeTab.dataset.feature);
+                            }
+                        }
+                    }
+                }, (error) => {
+                    console.error("Error fetching lectures:", error);
+                });
+                */
+                if (views.courseDetailView.classList.contains('active')) {
+                    const courseFeatureTabs = document.getElementById('course-feature-tabs');
+                    if (courseFeatureTabs) {
+                        const activeTab = courseFeatureTabs.querySelector('.tab-button.active');
+                        if (activeTab && (activeTab.dataset.feature === 'knowledge-bank' || activeTab.dataset.feature === 'quick-view')) {
+                            showCourseSubFeature(activeTab.dataset.feature);
+                        }
+                    }
+                }
+            }
+
+            async function addOrUpdateLecture(lectureData) {
+                if (!userId) {
+                    console.error("User not authenticated, cannot save lecture.");
+                    return;
+                }
+                try {
+                    if (currentCourseId) {
+                        lectureData.courseId = currentCourseId;
+                    }
+
+                    if (lectureData.id) {
+                        const index = lectures.findIndex(l => l.id === lectureData.id);
+                        if (index !== -1) {
+                            lectures[index] = { ...lectures[index], ...lectureData, lastModified: new Date().toISOString() };
+                        }
+                        console.log("Lecture updated successfully (dummy):", lectureData.id);
+                    } else {
+                        const newId = 'l' + Date.now();
+                        const newLecture = { ...lectureData, id: newId, dateCreated: new Date().toISOString(), lastModified: new Date().toISOString() };
+                        lectures.push(newLecture);
+                        console.log("Lecture added successfully (dummy) with ID:", newId);
+                        currentLectureId = newId;
+                    }
+                    // Update topic calendar if lecture is published
+                    if (lectureData.status === 'Published') {
+                        const associatedClass = classes.find(c => c.name === lectureData.associatedClass && c.courseId === lectureData.courseId);
+                        if (associatedClass) {
+                            const existingTopicIndex = associatedClass.topicCalendar.findIndex(t => t.name === lectureData.topic);
+                            if (existingTopicIndex !== -1) {
+                                associatedClass.topicCalendar[existingTopicIndex].status = 'Completed';
+                                associatedClass.topicCalendar[existingTopicIndex].date = new Date().toISOString().split('T')[0];
+                            } else {
+                                associatedClass.topicCalendar.push({
+                                    week: `Week ${associatedClass.topicCalendar.length + 1}`,
+                                    name: lectureData.topic,
+                                    status: 'Completed',
+                                    date: new Date().toISOString().split('T')[0]
+                                });
+                            }
+                        }
+                    }
+                    showView('course-detail-view', currentCourseData);
+                } catch (e) {
+                    console.error("Error adding/updating document: ", e);
+                }
+            }
+
+            async function deleteLecture(lectureId) {
+                if (!userId) {
+                    console.error("User not authenticated, cannot delete lecture.");
+                    return;
+                }
+                try {
+                    lectures = lectures.filter(l => l.id !== lectureId);
+                    console.log("Lecture deleted successfully (dummy):", lectureId);
+                    showCourseSubFeature('knowledge-bank'); // Re-render lecture list after delete
+                } catch (e) {
+                    console.error("Error deleting document: ", e);
+                }
+            }
+
+            async function fetchClasses() {
+                if (!userId) {
+                    console.log("User not authenticated yet, cannot fetch classes.");
+                    return;
+                }
+                if (views.courseDetailView.classList.contains('active')) {
+                    const courseFeatureTabs = document.getElementById('course-feature-tabs');
+                    if (courseFeatureTabs) {
+                        const activeTab = courseFeatureTabs.querySelector('.tab-button.active');
+                        if (activeTab && activeTab.dataset.feature === 'class-dynamics') {
+                            showCourseSubFeature('class-dynamics');
+                        }
+                    }
+                }
+            }
+
+            async function addClass(classData) {
+                if (!userId) {
+                    console.error("User not authenticated, cannot add class.");
+                    return;
+                }
+                try {
+                    if (currentCourseId) {
+                        classData.courseId = currentCourseId;
+                    }
+                    const newId = 'cl' + Date.now();
+                    const newClass = { ...classData, id: newId, dateCreated: new Date().toISOString(), lastModified: new Date().toISOString() };
+                    classes.push(newClass);
+                    console.log("Class added successfully (dummy) with ID:", newId);
+                    showCourseSubFeature('class-dynamics');
+                } catch (e) {
+                    console.error("Error adding class: ", e);
+                }
+            }
+
+            // --- Content Rendering Functions for Course Sub-Features ---
+
+            function renderKnowledgeBankContent() { // Renamed from renderLectureListContent
+                const courseFeatureContent = document.getElementById('course-feature-content');
+                courseFeatureContent.innerHTML = `
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-3xl font-bold text-stone-800">Knowledge Bank</h2>
+                        <button id="create-new-lecture-btn-sub" class="bg-amber-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-amber-700 transition-colors shadow-sm">
+                            <i class="fa-solid fa-plus mr-2"></i>Create New Lecture
+                        </button>
+                    </div>
+                    <div class="mb-6 flex items-center bg-white p-2 rounded-lg border border-stone-200">
+                        <i class="fa-solid fa-magnifying-glass text-stone-400 mx-3"></i>
+                        <input type="text" id="lecture-search-bar" placeholder="Search lectures by title, class, or keywords..." class="w-full bg-transparent focus:outline-none text-stone-700">
+                    </div>
+                    <div id="knowledge-bank-content" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Main lecture list / editor area -->
+                        <div class="lg:col-span-2 bg-white p-6 rounded-lg border border-stone-200">
+                            <h3 class="text-xl font-semibold text-stone-700 mb-4">Your Lectures</h3>
+                            <div id="lecture-list-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Lecture cards will be dynamically inserted here -->
+                            </div>
+                        </div>
+
+                        <!-- Resources Sidebar -->
+                        <div class="lg:col-span-1 bg-stone-50 p-6 rounded-lg border border-dashed border-stone-300">
+                            <h3 class="text-xl font-semibold text-stone-700 mb-4">Resources</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <h4 class="font-semibold text-stone-600 mb-2">Online Resources</h4>
+                                    <button class="w-full bg-stone-200 text-stone-700 py-2 rounded-lg hover:bg-stone-300 transition-colors flex items-center justify-center text-sm">
+                                        <i class="fa-solid fa-globe mr-2"></i>Fetch Online Resources
+                                    </button>
+                                    <p class="text-stone-500 text-xs mt-2">Search for relevant articles, videos, and external links.</p>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-stone-600 mb-2">My Uploaded Materials</h4>
+                                    <ul id="knowledge-bank-resources-list" class="list-disc list-inside text-stone-600 text-sm space-y-1">
+                                        <li>No resources uploaded yet.</li>
+                                    </ul>
+                                    <button class="mt-2 w-full bg-stone-200 text-stone-700 py-2 rounded-lg hover:bg-stone-300 transition-colors flex items-center justify-center text-sm">
+                                        <i class="fa-solid fa-upload mr-2"></i>Upload New Resource
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                const lectureListContainer = document.getElementById('lecture-list-container');
+                const lectureSearchBar = document.getElementById('lecture-search-bar');
+                const createNewLectureBtnSub = document.getElementById('create-new-lecture-btn-sub');
+
+                renderLectures(currentCourseId, lectureSearchBar.value);
+
+                lectureSearchBar.addEventListener('input', (e) => {
+                    renderLectures(currentCourseId, e.target.value);
+                });
+                createNewLectureBtnSub.addEventListener('click', () => showView('lecture-editor-view'));
+            }
+
+            function renderLectures(courseId, filterText = '') {
+                const lectureListContainer = document.getElementById('lecture-list-container');
+                if (!lectureListContainer) return;
+
+                lectureListContainer.innerHTML = '';
+                const filteredLectures = lectures.filter(lecture =>
+                    (lecture.courseId === courseId) &&
+                    (lecture.title.toLowerCase().includes(filterText.toLowerCase()) ||
+                    lecture.associatedClass.toLowerCase().includes(filterText.toLowerCase()) ||
+                    lecture.topic.toLowerCase().includes(filterText.toLowerCase()))
+                );
+
+                if (filteredLectures.length === 0) {
+                    lectureListContainer.innerHTML = '<p class="text-stone-500 text-center col-span-full">No lectures found for this course. Create a new one!</p>';
+                    return;
+                }
+
+                filteredLectures.forEach(lecture => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-white p-6 rounded-lg border border-stone-200 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between';
+                    card.innerHTML = `
+                        <div>
+                            <h3 class="text-xl font-semibold text-stone-800 mb-2">${lecture.title}</h3>
+                            <p class="text-stone-600 text-sm mb-1"><i class="fa-solid fa-graduation-cap mr-2 text-amber-600"></i>${lecture.associatedClass}</p>
+                            <p class="text-stone-600 text-sm mb-3"><i class="fa-solid fa-tag mr-2 text-amber-600"></i>${lecture.topic}</p>
+                            <p class="text-stone-500 text-xs">Status: <span class="font-semibold ${lecture.status === 'Published' ? 'text-green-600' : 'text-orange-600'}">${lecture.status}</span></p>
+                            <p class="text-stone-500 text-xs">Last Modified: ${new Date(lecture.lastModified).toLocaleDateString()}</p>
+                        </div>
+                        <div class="mt-4 flex space-x-3">
+                            <button data-id="${lecture.id}" class="edit-lecture-btn bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-600 transition-colors flex-1">
+                                <i class="fa-solid fa-edit mr-2"></i>Edit
+                            </button>
+                            <button data-id="${lecture.id}" class="delete-lecture-btn bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-600 transition-colors flex-1">
+                                <i class="fa-solid fa-trash-alt mr-2"></i>Delete
+                            </button>
+                        </div>
+                    `;
+                    lectureListContainer.appendChild(card);
+                });
+
+                document.querySelectorAll('.edit-lecture-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const lectureId = e.currentTarget.dataset.id;
+                        const lectureToEdit = lectures.find(l => l.id === lectureId);
+                        if (lectureToEdit) {
+                            currentLectureId = lectureId;
+                            showView('lecture-editor-view', lectureToEdit);
+                        }
+                    });
+                });
+
+                document.querySelectorAll('.delete-lecture-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const lectureId = e.currentTarget.dataset.id;
+                        if (confirm('Are you sure you want to delete this lecture?')) {
+                            deleteLecture(lectureId);
+                        }
+                    });
+                });
+            }
+
+            function renderQuickViewContent() {
+                const courseFeatureContent = document.getElementById('course-feature-content');
+                courseFeatureContent.innerHTML = `
+                    <p class="mb-6 text-stone-600">This section provides a concise overview of your upcoming lectures, perfect for a quick review before class. Select a date to see its key concepts, notes, and examples.</p>
+                    <div class="bg-white p-6 rounded-lg border border-stone-200 mb-8">
+                        <div class="flex justify-between items-center mb-4">
+                            <button id="prev-month-btn" class="text-stone-500 hover:text-amber-600"><i class="fa-solid fa-chevron-left"></i></button>
+                            <h3 id="current-month-year" class="text-xl font-semibold text-stone-700"></h3>
+                            <button id="next-month-btn" class="text-stone-500 hover:text-amber-600"><i class="fa-solid fa-chevron-right"></i></button>
+                        </div>
+                        <div id="quick-view-calendar" class="calendar-grid">
+                            <!-- Calendar days will be dynamically inserted here -->
+                        </div>
+                    </div>
+                    <div id="quick-view-detail-container" class="bg-white p-8 rounded-lg border border-stone-200">
+                        <div id="quick-view-lecture-display">
+                            <p class="text-stone-500 text-center">Select a date from the calendar above to view lecture details.</p>
+                        </div>
+                    </div>
+                `;
+
+                const prevMonthBtn = document.getElementById('prev-month-btn');
+                const nextMonthBtn = document.getElementById('next-month-btn');
+                const currentMonthYear = document.getElementById('current-month-year');
+                const quickViewCalendar = document.getElementById('quick-view-calendar');
+                const quickViewDetailContainer = document.getElementById('quick-view-detail-container');
+                const quickViewLectureDisplay = document.getElementById('quick-view-lecture-display');
+
+                function updateCalendar() {
+                    renderCalendar(currentQuickViewDate, quickViewCalendar, currentMonthYear);
+                    // Automatically display the lecture for the selected date on load/month change
+                    displayLectureForDate(currentQuickViewDate);
+                }
+
+                prevMonthBtn.addEventListener('click', () => {
+                    currentQuickViewDate.setMonth(currentQuickViewDate.getMonth() - 1);
+                    updateCalendar();
+                });
+
+                nextMonthBtn.addEventListener('click', () => {
+                    currentQuickViewDate.setMonth(currentQuickViewDate.getMonth() + 1);
+                    updateCalendar();
+                });
+
+                quickViewCalendar.addEventListener('click', (e) => {
+                    const targetDay = e.target.closest('.calendar-day.current-month');
+                    if (targetDay) {
+                        const selectedDay = parseInt(targetDay.textContent);
+                        currentQuickViewDate.setDate(selectedDay);
+                        updateCalendar(); // Re-render calendar to highlight selected date
+                        displayLectureForDate(currentQuickViewDate);
+                    }
+                });
+
+                function renderCalendar(date, container, monthYearDisplay) {
+                    container.innerHTML = ''; // Clear previous days
+                    const today = new Date();
+                    const year = date.getFullYear();
+                    const month = date.getMonth();
+
+                    monthYearDisplay.textContent = new Date(year, month).toLocaleString('en-US', { month: 'long', year: 'numeric' });
+
+                    const firstDayOfMonth = new Date(year, month, 1);
+                    const lastDayOfMonth = new Date(year, month + 1, 0);
+                    const daysInMonth = lastDayOfMonth.getDate();
+
+                    const startWeekday = firstDayOfMonth.getDay(); // 0 for Sunday, 1 for Monday
+
+                    const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                    weekdays.forEach(day => {
+                        const weekdayEl = document.createElement('div');
+                        weekdayEl.className = 'calendar-weekday text-sm';
+                        weekdayEl.textContent = day;
+                        container.appendChild(weekdayEl);
+                    });
+
+                    // Fill leading empty days
+                    for (let i = 0; i < startWeekday; i++) {
+                        const emptyDay = document.createElement('div');
+                        emptyDay.className = 'calendar-day';
+                        container.appendChild(emptyDay);
+                    }
+
+                    // Fill days of the month
+                    for (let day = 1; day <= daysInMonth; day++) {
+                        const dayEl = document.createElement('div');
+                        dayEl.className = 'calendar-day current-month text-sm';
+                        dayEl.textContent = day;
+
+                        const currentDayDate = new Date(year, month, day);
+                        const formattedDate = currentDayDate.toISOString().split('T')[0];
+
+                        // Check for lectures on this date for the current course
+                        const lecturesOnThisDate = lectures.filter(l =>
+                            l.courseId === currentCourseId && new Date(l.dateCreated).toISOString().split('T')[0] === formattedDate
+                        );
+
+                        if (lecturesOnThisDate.length > 0) {
+                            const hasPublished = lecturesOnThisDate.some(l => l.status === 'Published');
+                            const hasUpcoming = lecturesOnThisDate.some(l => l.status === 'Draft' || l.status === 'Upcoming');
+
+                            if (hasPublished) {
+                                dayEl.classList.add('has-lecture'); // Green for published
+                            } else if (hasUpcoming) {
+                                dayEl.classList.add('upcoming-lecture'); // Yellow for upcoming/draft
+                            }
+                        }
+
+                        // Mark selected date
+                        if (currentDayDate.toDateString() === date.toDateString()) {
+                            dayEl.classList.add('selected-date');
+                        }
+
+                        container.appendChild(dayEl);
+                    }
+                }
+
+                function displayLectureForDate(date) {
+                    const formattedDate = date.toISOString().split('T')[0];
+                    const lectureForDate = lectures.find(l =>
+                        l.courseId === currentCourseId && new Date(l.dateCreated).toISOString().split('T')[0] === formattedDate
+                    );
+
+                    if (lectureForDate) {
+                        quickViewLectureDisplay.innerHTML = `
+                            <div class="flex justify-between items-start mb-6">
+                                <div>
+                                    <h3 id="quick-view-title" class="text-2xl font-bold text-stone-800">${lectureForDate.title || 'N/A'}</h3>
+                                    <p id="quick-view-class" class="text-stone-500">${lectureForDate.associatedClass || 'N/A'}</p>
+                                </div>
+                                <button id="start-live-assist-btn-sub" class="bg-green-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-green-700 transition-colors shadow-sm" data-lecture-id="${lectureForDate.id}">
+                                    <i class="fa-solid fa-person-chalkboard mr-2"></i>Start Live Assist
+                                </button>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <h4 class="text-xl font-semibold mb-3 text-stone-700">Key Concepts</h4>
+                                    <ul id="quick-view-key-concepts" class="list-none text-stone-600 space-y-2 bg-stone-50 p-4 rounded-lg border border-stone-200">
+                                        ${(lectureForDate.keyConcepts || []).map(kc => `
+                                            <li class="flex items-start">
+                                                <input type="checkbox" class="mr-2 mt-1 accent-amber-600">
+                                                <div>
+                                                    <span class="font-medium">${kc.name}</span>
+                                                    <p class="text-sm text-stone-500">${kc.info}</p>
+                                                </div>
+                                            </li>
+                                        `).join('') || '<li>No key concepts available.</li>'}
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-semibold mb-3 text-stone-700">Teacher Notes / Reminders</h4>
+                                    <p id="quick-view-teacher-notes" class="text-stone-600 bg-stone-50 p-4 rounded-lg border border-stone-200">${lectureForDate.teacherNotes || 'No teacher notes.'}</p>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-semibold mb-3 text-stone-700">Analogies & Examples</h4>
+                                    <p id="quick-view-analogies" class="text-stone-600 bg-stone-50 p-4 rounded-lg border border-stone-200">${lectureForDate.analogies || 'No analogies or examples.'}</p>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-semibold mb-3 text-stone-700">Common Misconceptions</h4>
+                                    <ul id="quick-view-misconceptions" class="list-disc list-inside text-stone-600 space-y-1 bg-stone-50 p-4 rounded-lg border border-stone-200">
+                                        ${(lectureForDate.misconceptions || []).map(mc => `<li>${mc}</li>`).join('') || '<li>No common misconceptions mentioned.</li>'}
+                                    </ul>
+                                </div>
+                            </div>
+                        `;
+                        document.getElementById('start-live-assist-btn-sub').addEventListener('click', (e) => {
+                            const lectureId = e.currentTarget.dataset.lectureId;
+                            const selectedLecture = lectures.find(l => l.id === lectureId);
+                            if (selectedLecture) {
+                                currentLectureId = lectureId;
+                                showCourseSubFeature('live-assist', selectedLecture);
+                            }
+                        });
+                    } else {
+                        quickViewLectureDisplay.innerHTML = `<p class="text-stone-500 text-center">No lecture found for ${date.toLocaleDateString()}.</p>`;
+                    }
+                }
+                updateCalendar(); // Initial render
+            }
+
+
+            function renderLiveAssistContent(preloadedLecture = null) {
+                const courseFeatureContent = document.getElementById('course-feature-content');
+                courseFeatureContent.innerHTML = `
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h2 class="text-3xl font-bold text-stone-800">Live Assist</h2>
+                            <p id="live-assist-lecture-info" class="text-stone-500">Ready for class!</p>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <span id="recording-status" class="text-red-500 font-semibold hidden">
+                                <i class="fa-solid fa-circle text-red-500 animate-pulse mr-1"></i> Recording...
+                            </span>
+                            <button id="toggle-record-btn" class="bg-stone-200 text-stone-700 px-4 py-2 rounded-lg font-semibold hover:bg-stone-300 transition-colors shadow-sm">
+                                <i class="fa-solid fa-play mr-2"></i>Start Class
+                            </button>
+                            <button id="end-class-btn" class="bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700 transition-colors shadow-sm">
+                                <i class="fa-solid fa-power-off mr-2"></i>End Class
+                            </button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-180px)]">
+                        <div class="lg:col-span-2 bg-white p-6 rounded-lg border border-stone-200 flex flex-col">
+                            <h3 class="text-xl font-semibold mb-4 text-stone-700">Main Display (Projected)</h3>
+                            <div id="live-assist-main-display" class="flex-1 bg-stone-100 p-6 rounded-lg border border-dashed border-stone-300 flex items-center justify-center text-center text-stone-500 text-2xl overflow-y-auto">
+                                Welcome to the class! Content will appear here.
+                            </div>
+                        </div>
+                        <div class="lg:col-span-1 bg-white p-6 rounded-lg border border-stone-200 flex flex-col">
+                            <h3 class="text-xl font-semibold mb-4 text-stone-700">Teacher Control Panel</h3>
+                            <div class="space-y-4 flex-1 flex flex-col">
+                                <div>
+                                    <label for="live-assist-prompt-input" class="block text-sm font-medium text-stone-600 mb-1">Ask GuruBandhu</label>
+                                    <textarea id="live-assist-prompt-input" rows="3" placeholder="Explain this concept simply..." class="w-full p-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"></textarea>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button class="auto-prompt-btn bg-stone-100 text-stone-700 py-2 rounded-lg text-sm hover:bg-stone-200" data-prompt="Explain this simply.">Explain Simply</button>
+                                    <button class="auto-prompt-btn bg-stone-100 text-stone-700 py-2 rounded-lg text-sm hover:bg-stone-200" data-prompt="Give an example.">Give Example</button>
+                                    <button class="auto-prompt-btn bg-stone-100 text-stone-700 py-2 rounded-lg text-sm hover:bg-stone-200" data-prompt="Ask a question.">Ask a Question</button>
+                                    <button id="toggle-hyperlocal-btn" class="bg-stone-100 text-stone-700 py-2 rounded-lg text-sm hover:bg-stone-200">
+                                        <i class="fa-solid fa-map-marker-alt mr-1"></i> Hyperlocal
+                                    </button>
+                                </div>
+                                <button id="generate-diagram-btn" class="w-full bg-stone-100 text-stone-700 py-2.5 rounded-lg font-semibold hover:bg-stone-200 transition-colors shadow-sm flex items-center justify-center">
+                                    <i class="fa-solid fa-draw-polygon mr-2"></i>Generate Diagram
+                                </button>
+                                <button id="push-to-talk-btn" class="w-full bg-stone-100 text-stone-700 py-2.5 rounded-lg font-semibold hover:bg-stone-200 transition-colors shadow-sm flex items-center justify-center">
+                                    <i class="fa-solid fa-microphone mr-2"></i>Push to Talk (Simulated)
+                                </button>
+                                <button id="live-assist-generate-btn" class="w-full bg-amber-600 text-white py-2.5 rounded-lg font-semibold hover:bg-amber-700 transition-colors shadow-sm flex items-center justify-center">
+                                    <i class="fa-solid fa-robot mr-2"></i>Generate AI Response
+                                    <span id="live-assist-generate-spinner" class="loading-spinner ml-2 hidden"></span>
+                                </button>
+                                <div class="flex-1 bg-stone-50 p-4 rounded-lg border border-dashed border-stone-300 overflow-y-auto">
+                                    <h4 class="text-md font-semibold mb-2 text-stone-700">AI Response Preview</h4>
+                                    <div id="live-assist-ai-response-preview" class="text-stone-600 text-sm">
+                                        AI responses will appear here before pushing.
+                                    </div>
+                                </div>
+                                <button id="live-assist-push-btn" class="w-full bg-blue-600 text-white py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-sm">
+                                    <i class="fa-solid fa-share-from-square mr-2"></i>Push to Display
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                const recordingStatus = document.getElementById('recording-status');
+                const toggleRecordBtn = document.getElementById('toggle-record-btn');
+                const endClassBtn = document.getElementById('end-class-btn');
+                const liveAssistLectureInfo = document.getElementById('live-assist-lecture-info');
+                const liveAssistPromptInput = document.getElementById('live-assist-prompt-input');
+                const liveAssistGenerateBtn = document.getElementById('live-assist-generate-btn');
+                const liveAssistGenerateSpinner = document.getElementById('live-assist-generate-spinner');
+                const liveAssistAIResponsePreview = document.getElementById('live-assist-ai-response-preview');
+                const liveAssistPushBtn = document.getElementById('live-assist-push-btn');
+                const liveAssistMainDisplay = document.getElementById('live-assist-main-display');
+                const toggleHyperlocalBtn = document.getElementById('toggle-hyperlocal-btn');
+                const generateDiagramBtn = document.getElementById('generate-diagram-btn');
+                const pushToTalkBtn = document.getElementById('push-to-talk-btn');
+
+                let isRecording = false;
+                let isHyperlocal = false;
+
+                if (preloadedLecture) {
+                    liveAssistLectureInfo.textContent = `Lecture: ${preloadedLecture.title} | Class: ${preloadedLecture.associatedClass}`;
+                    liveAssistMainDisplay.innerHTML = preloadedLecture.generatedContent || '<p class="text-stone-500 text-center text-2xl">No content pre-loaded. Use GuruBandhu to generate!</p>';
+                } else {
+                    liveAssistLectureInfo.textContent = `Course: ${currentCourseData.name} | Ready for class!`;
+                }
+
+                toggleRecordBtn.addEventListener('click', () => {
+                    isRecording = !isRecording;
+                    if (isRecording) {
+                        recordingStatus.classList.remove('hidden');
+                        toggleRecordBtn.innerHTML = '<i class="fa-solid fa-stop mr-2"></i>Stop Class';
+                        toggleRecordBtn.classList.remove('bg-stone-200', 'text-stone-700');
+                        toggleRecordBtn.classList.add('bg-red-500', 'text-white');
+                    } else {
+                        recordingStatus.classList.add('hidden');
+                        toggleRecordBtn.innerHTML = '<i class="fa-solid fa-play mr-2"></i>Start Class';
+                        toggleRecordBtn.classList.remove('bg-red-500', 'text-white');
+                        toggleRecordBtn.classList.add('bg-stone-200', 'text-stone-700');
+                    }
+                });
+
+                endClassBtn.addEventListener('click', () => {
+                    if (isRecording) {
+                        isRecording = false;
+                        recordingStatus.classList.add('hidden');
+                        toggleRecordBtn.innerHTML = '<i class="fa-solid fa-play mr-2"></i>Start Class';
+                        toggleRecordBtn.classList.remove('bg-red-500', 'text-white');
+                        toggleRecordBtn.classList.add('bg-stone-200', 'text-stone-700');
+                    }
+                    alert('Class ended. Recording saved (simulated).');
+                    liveAssistMainDisplay.innerHTML = 'Welcome to the class! Content will appear here.';
+                    liveAssistLectureInfo.textContent = `Course: ${currentCourseData.name} | Ready for class!`;
+                });
+
+                document.querySelectorAll('.auto-prompt-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        liveAssistPromptInput.value = e.currentTarget.dataset.prompt;
+                    });
+                });
+
+                toggleHyperlocalBtn.addEventListener('click', () => {
+                    isHyperlocal = !isHyperlocal;
+                    if (isHyperlocal) {
+                        toggleHyperlocalBtn.classList.add('bg-amber-600', 'text-white');
+                        toggleHyperlocalBtn.classList.remove('bg-stone-100', 'text-stone-700');
+                    } else {
+                        toggleHyperlocalBtn.classList.remove('bg-amber-600', 'text-white');
+                        toggleHyperlocalBtn.classList.add('bg-stone-100', 'text-stone-700');
+                    }
+                });
+
+                generateDiagramBtn.addEventListener('click', () => {
+                    alert('Diagram generation feature coming soon!');
+                    liveAssistMainDisplay.innerHTML = `<p class="text-stone-500 text-center text-2xl">Diagram Placeholder: [Generated Diagram Here]</p>`;
+                });
+
+                pushToTalkBtn.addEventListener('click', () => {
+                    const simulatedVoiceInput = prompt("Simulate voice input (e.g., 'What is photosynthesis?'):");
+                    if (simulatedVoiceInput) {
+                        liveAssistPromptInput.value = simulatedVoiceInput;
+                        alert('Simulated voice input received!');
+                    }
+                });
+
+                liveAssistGenerateBtn.addEventListener('click', async () => {
+                    const prompt = liveAssistPromptInput.value;
+                    if (!prompt) {
+                        alert('Please enter a prompt for GuruBandhu.');
+                        return;
+                    }
+
+                    liveAssistGenerateSpinner.classList.remove('hidden');
+                    liveAssistAIResponsePreview.innerHTML = `<p class="text-stone-500">GuruBandhu is thinking...</p>`;
+
+                    let fullPrompt = prompt;
+                    if (isHyperlocal) {
+                        fullPrompt += " Incorporate local examples from India.";
+                    }
+                    if (preloadedLecture && preloadedLecture.language) {
+                         fullPrompt += ` Explain this in ${preloadedLecture.language}.`;
+                    } else if (currentCourseData && currentCourseData.language) { // Assuming course data might have a default language
+                        fullPrompt += ` Explain this in ${currentCourseData.language}.`;
+                    }
+
+                    try {
+                        let chatHistory = [];
+                        chatHistory.push({ role: "user", parts: [{ text: `Respond concisely to the following question or request for a live classroom setting: "${fullPrompt}"` }] });
+                        const payload = { contents: chatHistory };
+                        const apiKey = "";
+                        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                        const response = await fetch(apiUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+
+                        const result = await response.json();
+                        if (result.candidates && result.candidates.length > 0 &&
+                            result.candidates[0].content && result.candidates[0].content.parts &&
+                            result.candidates[0].content.parts.length > 0) {
+                            const text = result.candidates[0].content.parts[0].text;
+                            liveAssistAIResponsePreview.innerHTML = `<p>${text.replace(/\n/g, '<br>')}</p>`;
+                        } else {
+                            liveAssistAIResponsePreview.innerHTML = '<p class="text-red-500">Error: Could not get AI response.</p>';
+                            console.error("Unexpected API response structure:", result);
+                        }
+                    } catch (error) {
+                        console.error("Error calling Gemini API for Live Assist:", error);
+                        liveAssistAIResponsePreview.innerHTML = '<p class="text-red-500">Error: Failed to connect to AI service.</p>';
+                    } finally {
+                        liveAssistGenerateSpinner.classList.add('hidden');
+                    }
+                });
+
+                liveAssistPushBtn.addEventListener('click', () => {
+                    const contentToPush = liveAssistAIResponsePreview.innerHTML;
+                    if (contentToPush.includes('AI responses will appear here') || contentToPush.includes('GuruBandhu is thinking') || contentToPush.includes('Error:')) {
+                        alert('Please generate a valid AI response first.');
+                        return;
+                    }
+                    liveAssistMainDisplay.innerHTML = contentToPush;
+                    liveAssistPromptInput.value = '';
+                    liveAssistAIResponsePreview.innerHTML = 'AI responses will appear here before pushing.';
+                });
+            }
+
+            function renderClassDynamicsContent() {
+                const courseFeatureContent = document.getElementById('course-feature-content');
+                courseFeatureContent.innerHTML = `
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-3xl font-bold text-stone-800">Class Dynamics</h2>
+                        <button id="add-new-class-btn-sub" class="bg-amber-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-amber-700 transition-colors shadow-sm">
+                            <i class="fa-solid fa-plus mr-2"></i>Add New Class
+                        </button>
+                    </div>
+                    <p class="mb-6 text-stone-600">Manage your classes, student performance, and curriculum progress here.</p>
+                    <div id="class-list-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                        <!-- Class cards will be dynamically inserted here -->
+                    </div>
+                    <div id="class-detail-container" class="bg-white p-8 rounded-lg border border-stone-200 hidden">
+                        <div class="flex items-center mb-6">
+                            <button id="back-to-class-list-btn-sub" class="text-stone-500 hover:text-amber-600 mr-4">
+                                <i class="fa-solid fa-arrow-left fa-xl"></i>
+                            </button>
+                            <div>
+                                <h3 id="class-detail-name" class="text-2xl font-bold text-stone-800"></h3>
+                                <p id="class-detail-info" class="text-stone-500"></p>
+                            </div>
+                        </div>
+                        <div class="border-b border-stone-200 mb-6">
+                            <nav class="flex space-x-4" id="class-detail-tabs">
+                                <button class="tab-button py-2 px-4 text-stone-600 hover:text-amber-600 active" data-tab="students">Students</button>
+                                <button class="tab-button py-2 px-4 text-stone-600 hover:text-amber-600" data-tab="topic-calendar">Topic Calendar</button>
+                                <button class="tab-button py-2 px-4 text-stone-600 hover:text-amber-600" data-tab="performance">Performance Overview</button>
+                                <button class="tab-button py-2 px-4 text-stone-600 hover:text-amber-600" data-tab="resources">Resources & Evaluation</button>
+                            </nav>
+                        </div>
+                        <div id="class-detail-content-area">
+                            <!-- Tab content will be dynamically loaded here -->
+                            <div id="tab-students" class="tab-content active">
+                                <h4 class="text-xl font-semibold mb-4 text-stone-700">Students in this Class</h4>
+                                <div id="student-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <!-- Student cards will be inserted here -->
+                                </div>
+                                <button class="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"><i class="fa-solid fa-user-plus mr-2"></i>Add Student</button>
+                            </div>
+                            <div id="tab-topic-calendar" class="tab-content hidden">
+                                <h4 class="text-xl font-semibold mb-4 text-stone-700">Topic Calendar</h4>
+                                <div id="topic-calendar-content" class="bg-stone-50 p-4 rounded-lg border border-stone-200">
+                                    <p class="text-stone-600">Planned topics and their progress:</p>
+                                    <ul class="list-disc list-inside mt-2 space-y-1">
+                                        <li></li>
+                                    </ul>
+                                    <button class="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"><i class="fa-solid fa-calendar-plus mr-2"></i>Manage Topics</button>
+                                    <button class="mt-4 ml-2 bg-stone-200 text-stone-700 px-4 py-2 rounded-lg hover:bg-stone-300"><i class="fa-solid fa-calendar-check mr-2"></i>Sync with Google Calendar</button>
+                                </div>
+                            </div>
+                            <div id="tab-performance" class="tab-content hidden">
+                                <h4 class="text-xl font-semibold mb-4 text-stone-700">Performance Overview</h4>
+                                <div class="bg-stone-50 p-4 rounded-lg border border-stone-200">
+                                    <p class="text-stone-600">Overall class performance metrics:</p>
+                                    <div class="chart-container w-full max-w-xl mx-auto h-64 md:h-80 max-h-96 mt-4">
+                                        <canvas id="classPerformanceChart"></canvas>
+                                    </div>
+                                    <p class="text-sm text-stone-500 mt-2">Average score on last 3 assessments: 78%</p>
+                                </div>
+                            </div>
+                            <div id="tab-resources" class="tab-content hidden">
+                                <h4 class="text-xl font-semibold mb-4 text-stone-700">Class Resources & Evaluation</h4>
+                                <div class="bg-stone-50 p-4 rounded-lg border border-stone-200 mb-4">
+                                    <h5 class="font-semibold text-stone-700 mb-2">Resources:</h5>
+                                    <ul id="class-resources-list" class="list-disc list-inside mt-2 space-y-1">
+                                        <li></li>
+                                    </ul>
+                                    <button class="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"><i class="fa-solid fa-upload mr-2"></i>Upload Resource</button>
+                                </div>
+                                <div class="bg-stone-50 p-4 rounded-lg border border-stone-200">
+                                    <h5 class="font-semibold text-stone-700 mb-2">Evaluation Data:</h5>
+                                    <p id="evaluation-data-content" class="text-stone-600">No evaluation data available.</p>
+                                    <button class="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"><i class="fa-solid fa-file-pen mr-2"></i>Add Evaluation Notes</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                const classListContainer = document.getElementById('class-list-container');
+                const addNewClassBtnSub = document.getElementById('add-new-class-btn-sub');
+                const classDetailContainer = document.getElementById('class-detail-container');
+                const backToClassListBtnSub = document.getElementById('back-to-class-list-btn-sub');
+                const classDetailName = document.getElementById('class-detail-name');
+                const classDetailInfo = document.getElementById('class-detail-info');
+                const classDetailTabs = document.getElementById('class-detail-tabs');
+                const classDetailContentArea = document.getElementById('class-detail-content-area');
+                const studentList = document.getElementById('student-list');
+                const classPerformanceChartCanvas = document.getElementById('classPerformanceChart');
+                const googleCalendarSyncBtn = document.querySelector('#tab-topic-calendar button:last-child');
+                const evaluationDataContent = document.getElementById('evaluation-data-content');
+
+                renderClasses(currentCourseId);
+
+                addNewClassBtnSub.addEventListener('click', () => {
+                    const newClassName = prompt("Enter new class name:");
+                    if (newClassName) {
+                        addClass({
+                            name: newClassName,
+                            gradeRange: "Mixed Grades",
+                            students: [],
+                            topicCalendar: [],
+                            performanceData: { labels: [], data: [] },
+                            evaluationData: 'No evaluation notes yet.',
+                            resources: []
+                        });
+                    }
+                });
+
+                backToClassListBtnSub.addEventListener('click', () => {
+                    classDetailContainer.classList.add('hidden');
+                    classListContainer.classList.remove('hidden');
+                });
+
+                if (classDetailTabs) {
+                    classDetailTabs.querySelectorAll('.tab-button').forEach(button => {
+                        button.addEventListener('click', (e) => {
+                            classDetailTabs.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                            e.currentTarget.classList.add('active');
+
+                            classDetailContentArea.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+                            const targetTab = e.currentTarget.dataset.tab;
+                            document.getElementById(`tab-${targetTab}`).classList.remove('hidden');
+
+                            if (targetTab === 'performance') {
+                                const selectedClassId = classDetailContainer.dataset.classId;
+                                const selectedClass = classes.find(c => c.id === selectedClassId);
+                                if (selectedClass) {
+                                    renderPerformanceChart(selectedClass.performanceData);
+                                }
+                            }
+                        });
+                    });
+                }
+
+                if (googleCalendarSyncBtn) {
+                    googleCalendarSyncBtn.addEventListener('click', () => {
+                        alert('Google Calendar sync feature coming soon!');
+                    });
+                }
+
+                function renderClasses(courseId) {
+                    classListContainer.innerHTML = '';
+                    const filteredClasses = classes.filter(classData => classData.courseId === courseId);
+
+                    if (filteredClasses.length === 0) {
+                        classListContainer.innerHTML = '<p class="text-stone-500 text-center col-span-full">No classes found for this course. Add a new one!</p>';
+                        return;
+                    }
+
+                    filteredClasses.forEach(classData => {
+                        const card = document.createElement('div');
+                        card.className = 'bg-white p-6 rounded-lg border border-stone-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer';
+                        card.dataset.id = classData.id;
+                        card.innerHTML = `
+                            <h3 class="text-xl font-semibold text-stone-800 mb-2">${classData.name}</h3>
+                            <p class="text-stone-600 text-sm mb-1"><i class="fa-solid fa-layer-group mr-2 text-amber-600"></i>${classData.gradeRange}</p>
+                            <p class="text-stone-500 text-xs">Students: ${classData.students ? classData.students.length : 0}</p>
+                        `;
+                        classListContainer.appendChild(card);
+                    });
+
+                    document.querySelectorAll('#class-list-container .cursor-pointer').forEach(card => {
+                        card.addEventListener('click', (e) => {
+                            const classId = e.currentTarget.dataset.id;
+                            const selectedClass = classes.find(c => c.id === classId);
+                            if (selectedClass) {
+                                displayClassDetails(selectedClass);
+                            }
+                        });
+                    });
+                }
+
+                function displayClassDetails(classData) {
+                    classListContainer.classList.add('hidden');
+                    classDetailContainer.classList.remove('hidden');
+                    classDetailContainer.dataset.classId = classData.id; // Store class ID for performance chart
+
+                    classDetailName.textContent = classData.name || 'N/A';
+                    classDetailInfo.textContent = `${classData.gradeRange || 'N/A'} | User ID: ${userId}`;
+
+                    classDetailTabs.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                    classDetailContentArea.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+                    document.querySelector('#class-detail-tabs .tab-button[data-tab="students"]').classList.add('active');
+                    document.getElementById('tab-students').classList.remove('hidden');
+
+                    renderStudents(classData.students);
+                    renderTopicCalendar(classData.topicCalendar);
+                    renderPerformanceChart(classData.performanceData);
+                    renderResources(classData.resources, classData.evaluationData); // Pass evaluationData
+                }
+
+                function renderStudents(students) {
+                    studentList.innerHTML = '';
+                    if (!students || students.length === 0) {
+                        studentList.innerHTML = '<p class="text-stone-500 col-span-full">No students added to this class yet.</p>';
+                        return;
+                    }
+                    students.forEach(student => {
+                        const studentCard = document.createElement('div');
+                        studentCard.className = 'bg-stone-50 p-4 rounded-lg border border-stone-200 flex items-center space-x-3';
+                        studentCard.innerHTML = `
+                            <i class="fa-solid fa-user-graduate text-blue-600 text-xl"></i>
+                            <div>
+                                <p class="font-semibold text-stone-700">${student.name}</p>
+                                <p class="text-sm text-stone-500">Grade: ${student.grade}</p>
+                                <p class="text-xs text-stone-500">Attendance: ${student.attendance || 'N/A'}</p>
+                                <p class="text-xs text-stone-500">Performance: ${student.performance || 'N/A'}%</p>
+                            </div>
+                        `;
+                        studentList.appendChild(studentCard);
+                    });
+                }
+
+                function renderTopicCalendar(topics) {
+                    const topicCalendarContentList = document.querySelector('#tab-topic-calendar ul');
+                    topicCalendarContentList.innerHTML = '';
+                    if (!topics || topics.length === 0) {
+                        topicCalendarContentList.innerHTML = '<p class="text-stone-500 mt-2">No topics planned yet.</p>';
+                    } else {
+                        topics.forEach(topic => {
+                            topicCalendarContentList.innerHTML += `<li>${topic.week}: ${topic.name} (${topic.status}) - ${topic.date ? new Date(topic.date).toLocaleDateString() : 'N/A'}</li>`;
+                        });
+                    }
+                }
+
+                function renderPerformanceChart(performanceData) {
+                    if (classPerformanceChart) {
+                        classPerformanceChart.destroy();
+                    }
+                    const labels = performanceData?.labels || ['Assessment 1', 'Assessment 2', 'Assessment 3'];
+                    const data = performanceData?.data || [65, 78, 82];
+
+                    classPerformanceChart = new Chart(classPerformanceChartCanvas, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Average Score (%)',
+                                data: data,
+                                backgroundColor: 'rgba(245, 158, 11, 0.7)',
+                                borderColor: 'rgba(245, 158, 11, 1)',
+                                borderWidth: 1,
+                                borderRadius: 5,
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: true,
+                                    position: 'top',
+                                    labels: {
+                                        color: '#57534e'
+                                    }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            return `${context.dataset.label}: ${context.raw}%`;
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 100,
+                                    ticks: {
+                                        color: '#78716c'
+                                    },
+                                    grid: {
+                                        color: '#e7e5e4'
+                                    }
+                                },
+                                x: {
+                                    ticks: {
+                                        color: '#78716c'
+                                    },
+                                    grid: {
+                                        display: false
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+
+                function renderResources(resources, evaluationData) {
+                    const resourcesList = document.getElementById('class-resources-list');
+                    const evalDataContent = document.getElementById('evaluation-data-content');
+
+                    resourcesList.innerHTML = '';
+                    if (!resources || resources.length === 0) {
+                        resourcesList.innerHTML = '<li>No resources uploaded yet.</li>';
+                    } else {
+                        resources.forEach(resource => {
+                            resourcesList.innerHTML += `<li><a href="${resource.url}" target="_blank" class="text-blue-600 hover:underline">${resource.name} (${resource.type})</a></li>`;
+                        });
+                    }
+                    evalDataContent.textContent = evaluationData || 'No evaluation data available.';
+                }
+            }
+
+            function renderInsightsContent() {
+                const courseFeatureContent = document.getElementById('course-feature-content');
+                courseFeatureContent.innerHTML = `
+                    <h2 class="text-3xl font-bold text-stone-800">Insights</h2>
+                    <p class="mb-6 text-stone-600">AI-powered recommendations and key trends for your course.</p>
+                    <div class="space-y-6">
+                        <div class="bg-white p-6 rounded-lg border border-stone-200">
+                            <h3 class="text-xl font-semibold text-stone-700 mb-4">AI Recommendations</h3>
+                            <p class="text-stone-600">Based on student performance in Grade 4 Math Group A, consider reviewing fractions with visual aids. Students like Rohan Gupta might benefit from extra practice sessions.</p>
+                            <p class="text-stone-500 text-sm mt-2"><i>(Recommendations generated based on dummy data)</i></p>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg border border-stone-200">
+                            <h3 class="text-xl font-semibold text-stone-700 mb-4">Topic of the Week</h3>
+                            <p class="text-stone-600">For Math Fundamentals, the suggested topic for next week is "Decimal Basics" based on the current curriculum progress.</p>
+                            <p class="text-stone-500 text-sm mt-2"><i>(Suggested based on dummy data)</i></p>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg border border-stone-200">
+                            <h3 class="text-xl font-semibold text-stone-700 mb-4">Engagement Trends</h3>
+                            <p class="text-stone-600">Live Assist sessions show higher student participation when interactive questions are used every 10-15 minutes.</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+
+            // --- Event Listeners ---
+            backToListBtn.addEventListener('click', () => showView('course-detail-view', currentCourseData));
+            document.getElementById('generate-content-btn').addEventListener('click', () => handleContentGeneration('content'));
+            document.getElementById('summarize-content-btn').addEventListener('click', () => handleContentGeneration('summarize'));
+            document.getElementById('generate-questions-btn').addEventListener('click', () => handleContentGeneration('questions'));
+            saveDraftBtn.addEventListener('click', () => {
+                const lectureData = {
+                    id: currentLectureId,
+                    title: lectureTitleInput.value,
+                    associatedClass: associatedClassInput.value,
+                    topic: lectureTopicInput.value,
+                    prompt: contentPromptInput.value,
+                    language: languageSelector.value,
+                    grade: gradeSelector.value,
+                    generatedContent: generatedContentDisplay.innerHTML,
+                    status: 'Draft',
+                    keyConcepts: dummyLectures[0].keyConcepts, // Using dummy concepts for simplicity
+                    teacherNotes: 'Remember to emphasize visual examples.',
+                    analogies: 'Think of water cycle like a giant sprinkler system.',
+                    misconceptions: ['Water disappears, it just changes form.']
+                };
+                addOrUpdateLecture(lectureData);
+            });
+            publishLectureBtn.addEventListener('click', () => {
+                const lectureData = {
+                    id: currentLectureId,
+                    title: lectureTitleInput.value,
+                    associatedClass: associatedClassInput.value,
+                    topic: lectureTopicInput.value,
+                    prompt: contentPromptInput.value,
+                    language: languageSelector.value,
+                    grade: gradeSelector.value,
+                    generatedContent: generatedContentDisplay.innerHTML,
+                    status: 'Published',
+                    keyConcepts: dummyLectures[0].keyConcepts, // Using dummy concepts for simplicity
+                    teacherNotes: 'Remember to emphasize visual examples.',
+                    analogies: 'Think of water cycle like a giant sprinkler system.',
+                    misconceptions: ['Water disappears, it just changes form.']
+                };
+                addOrUpdateLecture(lectureData);
+            });
+
+            // Initial view load
+            showView('dashboard-view');
+        });
+    </script>
+</body>
+</html>
