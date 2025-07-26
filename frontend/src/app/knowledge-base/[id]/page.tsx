@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { fetchNotebook, updateNotebookSources, sendChatMessage } from '@/lib/api';
 import SourcesPanel from '@/components/notebook/SourcesPanel';
 import ChatInterface from '@/components/notebook/ChatInterface';
 import StudioPanel from '@/components/notebook/StudioPanel';
@@ -15,97 +16,74 @@ interface Source {
   dateAdded: string;
 }
 
+interface Notebook {
+  id: number;
+  title: string;
+  class: string;
+  section: string;
+  description: string;
+  sources: Source[];
+}
+
 export default function NotebookDetail() {
   const params = useParams();
   const id = params?.id as string;
 
-  // Mock data - in real app this would come from API based on ID
-  const notebookData: Record<string, {
-    title: string;
-    class: string;
-    section: string;
-    description: string;
-    sources: Source[];
-  }> = {
-    '1': {
-      title: "Advanced Mathematics - Calculus",
-      class: "Grade 12 Mathematics",
-      section: "Section A",
-      description: "Comprehensive study notes for calculus concepts including limits, derivatives, and integrals for Grade 12 students.",
-      sources: [
-        { id: '1', title: 'Calculus Fundamentals.pdf', type: 'pdf' as const, selected: true, dateAdded: '2 days ago' },
-        { id: '2', title: 'Derivative Rules Handbook', type: 'doc' as const, selected: true, dateAdded: '1 week ago' },
-        { id: '3', title: 'Integration Techniques Notes', type: 'text' as const, selected: false, dateAdded: '3 days ago' },
-        { id: '4', title: 'Khan Academy - Calculus Course', type: 'url' as const, selected: true, dateAdded: '5 days ago' }
-      ]
-    },
-    '2': {
-      title: "Physics - Quantum Mechanics",
-      class: "Grade 11 Physics",
-      section: "Section B", 
-      description: "Fundamental concepts of quantum mechanics for advanced physics students.",
-      sources: [
-        { id: '1', title: 'Quantum Physics Introduction.pdf', type: 'pdf' as const, selected: true, dateAdded: '1 week ago' },
-        { id: '2', title: 'Wave-Particle Duality Experiments', type: 'doc' as const, selected: false, dateAdded: '2 weeks ago' },
-        { id: '3', title: 'Heisenberg Principle Explained', type: 'text' as const, selected: true, dateAdded: '4 days ago' }
-      ]
-    },
-    '3': {
-      title: "Chemistry - Organic Compounds",
-      class: "Grade 10 Chemistry",
-      section: "Section A",
-      description: "Study of organic chemistry focusing on carbon-based compounds and their reactions.",
-      sources: [
-        { id: '1', title: 'Organic Chemistry Basics.pdf', type: 'pdf' as const, selected: true, dateAdded: '3 days ago' },
-        { id: '2', title: 'Hydrocarbon Classification Guide', type: 'doc' as const, selected: true, dateAdded: '1 week ago' },
-        { id: '3', title: 'Functional Groups Reference', type: 'text' as const, selected: false, dateAdded: '5 days ago' },
-        { id: '4', title: 'ChemLibreTexts - Organic Chemistry', type: 'url' as const, selected: true, dateAdded: '2 weeks ago' }
-      ]
-    },
-    '4': {
-      title: "Literature - Shakespeare Studies",
-      class: "Grade 12 English",
-      section: "Section C",
-      description: "Analysis of Shakespeare's major works including themes, characters, and literary devices.",
-      sources: [
-        { id: '1', title: 'Hamlet Complete Text.pdf', type: 'pdf' as const, selected: true, dateAdded: '5 days ago' },
-        { id: '2', title: 'Macbeth Analysis Notes', type: 'doc' as const, selected: true, dateAdded: '1 week ago' },
-        { id: '3', title: 'Shakespeare Themes Overview', type: 'text' as const, selected: false, dateAdded: '3 days ago' }
-      ]
+  const [notebook, setNotebook] = useState<Notebook | null>(null);
+  const [sources, setSources] = useState<Source[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch notebook data from API using the centralized API service
+  useEffect(() => {
+    if (!id) return;
+
+    const loadNotebook = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const data = await fetchNotebook(id) as { notebook: Notebook };
+        setNotebook(data.notebook);
+        setSources(data.notebook.sources);
+      } catch (err) {
+        console.error('Error fetching notebook:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load notebook');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadNotebook();
+  }, [id]);
+
+  // Update sources in backend when changed using the API service
+  const updateSourcesInBackend = async (updatedSources: Source[]) => {
+    try {
+      await updateNotebookSources(id, updatedSources);
+    } catch (err) {
+      console.error('Error updating sources:', err);
+      // Could show a toast notification here in the future
     }
   };
 
-  // Handle case where id is not provided or not found
-  if (!id || !notebookData[id]) {
-    return (
-      <div className="p-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-2xl font-bold text-gray-800 mb-4">Notebook Not Found</h1>
-          <p className="text-gray-600 mb-6">The notebook you're looking for doesn't exist.</p>
-          <Link href="/knowledge-base" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-            Back to Knowledge Base
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  const notebook = notebookData[id];
-  const [sources, setSources] = useState<Source[]>(notebook.sources);
-
   const selectedSourcesCount = sources.filter(source => source.selected).length;
 
-  const handleSourceToggle = (sourceId: string) => {
-    setSources(prev => prev.map(source => 
+  const handleSourceToggle = async (sourceId: string) => {
+    const updatedSources = sources.map(source => 
       source.id === sourceId 
         ? { ...source, selected: !source.selected }
         : source
-    ));
+    );
+    setSources(updatedSources);
+    await updateSourcesInBackend(updatedSources);
   };
 
-  const handleSelectAll = () => {
+  const handleSelectAll = async () => {
     const allSelected = sources.every(source => source.selected);
-    setSources(prev => prev.map(source => ({ ...source, selected: !allSelected })));
+    const updatedSources = sources.map(source => ({ ...source, selected: !allSelected }));
+    setSources(updatedSources);
+    await updateSourcesInBackend(updatedSources);
   };
 
   const handleAddSource = () => {
@@ -118,9 +96,16 @@ export default function NotebookDetail() {
     console.log('Discover clicked');
   };
 
-  const handleSendMessage = (message: string) => {
-    // Placeholder for sending message to LLM
-    console.log('Message sent:', message);
+  const handleSendMessage = async (message: string) => {
+    try {
+      const selectedSources = sources.filter(source => source.selected);
+      const response = await sendChatMessage(id, message, selectedSources);
+      console.log('AI Response:', response);
+      // The ChatInterface component will handle the response through its own state
+    } catch (err) {
+      console.error('Error sending message:', err);
+      // Could show an error notification here in the future
+    }
   };
 
   const handleCreateAudioOverview = () => {
@@ -146,6 +131,87 @@ export default function NotebookDetail() {
   const handleAddNote = () => {
     console.log('Adding note...');
   };
+
+  // Retry loading notebook
+  const retryLoadNotebook = () => {
+    window.location.reload();
+  };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="flex flex-col bg-gray-50" style={{ height: 'calc(100vh - 76px)' }}>
+        <nav className="bg-white border-b border-gray-200 px-6 py-3 flex-shrink-0">
+          <div className="flex items-center space-x-2 text-sm text-gray-500">
+            <Link href="/knowledge-base" className="hover:text-gray-700 transition-colors">
+              Knowledge Base
+            </Link>
+            <span>›</span>
+            <span className="text-gray-800">Loading...</span>
+          </div>
+        </nav>
+        
+        <div className="flex-1 flex items-center justify-center">
+          <div className="flex items-center space-x-2">
+            <div className="w-4 h-4 bg-blue-600 rounded-full animate-bounce"></div>
+            <div className="w-4 h-4 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+            <div className="w-4 h-4 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+            <span className="ml-3 text-gray-600">Loading notebook...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error || !notebook) {
+    return (
+      <div className="flex flex-col bg-gray-50" style={{ height: 'calc(100vh - 76px)' }}>
+        <nav className="bg-white border-b border-gray-200 px-6 py-3 flex-shrink-0">
+          <div className="flex items-center space-x-2 text-sm text-gray-500">
+            <Link href="/knowledge-base" className="hover:text-gray-700 transition-colors">
+              Knowledge Base
+            </Link>
+            <span>›</span>
+            <span className="text-gray-800">Error</span>
+          </div>
+        </nav>
+        
+        <div className="flex-1 flex items-center justify-center p-6">
+          <div className="max-w-md mx-auto text-center">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+              <svg className="mx-auto h-12 w-12 text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <h1 className="text-xl font-bold text-red-800 mb-2">
+                {error === 'Notebook not found' ? 'Notebook Not Found' : 'Error Loading Notebook'}
+              </h1>
+              <p className="text-red-700 mb-4">
+                {error === 'Notebook not found' 
+                  ? "The notebook you're looking for doesn't exist." 
+                  : error || 'Failed to load notebook. Please make sure the server is running.'
+                }
+              </p>
+              <div className="flex gap-2 justify-center">
+                <Link 
+                  href="/knowledge-base" 
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Back to Knowledge Base
+                </Link>
+                <button 
+                  onClick={retryLoadNotebook}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Retry
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col bg-gray-50" style={{ height: 'calc(100vh - 76px)' }}>

@@ -1,59 +1,51 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { fetchNotebooks } from '@/lib/api';
+
+interface Notebook {
+  id: number;
+  title: string;
+  class: string;
+  section: string;
+  tags: string[];
+  lastModified: string;
+  noteCount: number;
+  color: string;
+  description: string;
+}
 
 export default function KnowledgeBase() {
   // State for search and filtering
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
-
-  // Mock data for demonstration
-  const notebooks = [
-    {
-      id: 1,
-      title: "Advanced Mathematics - Calculus",
-      class: "Grade 12 Mathematics",
-      section: "Section A",
-      tags: ["calculus", "derivatives", "integrals", "grade-12"],
-      lastModified: "2 days ago",
-      noteCount: 23,
-      color: "bg-blue-50 border-blue-200"
-    },
-    {
-      id: 2,
-      title: "Physics - Quantum Mechanics",
-      class: "Grade 11 Physics",
-      section: "Section B",
-      tags: ["quantum", "mechanics", "physics", "grade-11"],
-      lastModified: "1 week ago",
-      noteCount: 15,
-      color: "bg-green-50 border-green-200"
-    },
-    {
-      id: 3,
-      title: "Chemistry - Organic Compounds",
-      class: "Grade 10 Chemistry",
-      section: "Section A",
-      tags: ["organic", "compounds", "chemistry", "grade-10"],
-      lastModified: "3 days ago",
-      noteCount: 31,
-      color: "bg-purple-50 border-purple-200"
-    },
-    {
-      id: 4,
-      title: "Literature - Shakespeare Studies",
-      class: "Grade 12 English",
-      section: "Section C",
-      tags: ["shakespeare", "literature", "english", "grade-12"],
-      lastModified: "5 days ago",
-      noteCount: 18,
-      color: "bg-yellow-50 border-yellow-200"
-    }
-  ];
+  const [notebooks, setNotebooks] = useState<Notebook[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Available filter tags
   const allTags = ["grade-12", "grade-11", "grade-10", "mathematics", "physics", "chemistry", "english", "calculus", "quantum", "organic", "shakespeare", "derivatives", "integrals", "mechanics", "compounds", "literature"];
+
+  // Fetch notebooks from API using the centralized API service
+  useEffect(() => {
+    const loadNotebooks = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const data = await fetchNotebooks();
+        setNotebooks(data.notebooks);
+      } catch (err) {
+        console.error('Error fetching notebooks:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load notebooks. Please make sure the server is running.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadNotebooks();
+  }, []);
 
   // Filter notebooks based on search term and active filters
   const filteredNotebooks = notebooks.filter(notebook => {
@@ -85,6 +77,64 @@ export default function KnowledgeBase() {
     setActiveFilters([]);
     setSearchTerm('');
   };
+
+  // Retry loading notebooks
+  const retryLoadNotebooks = () => {
+    window.location.reload();
+  };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">Knowledge Base</h1>
+            <p className="text-gray-600">Organize your teaching materials and preparation notes by class and subject</p>
+          </div>
+          <div className="flex items-center justify-center py-12">
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 bg-blue-600 rounded-full animate-bounce"></div>
+              <div className="w-4 h-4 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+              <div className="w-4 h-4 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+              <span className="ml-3 text-gray-600">Loading notebooks...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">Knowledge Base</h1>
+            <p className="text-gray-600">Organize your teaching materials and preparation notes by class and subject</p>
+          </div>
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+            <div className="flex items-center">
+              <svg className="w-6 h-6 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <h3 className="text-red-800 font-medium">Error Loading Notebooks</h3>
+                <p className="text-red-700 text-sm mt-1">{error}</p>
+                <button 
+                  onClick={retryLoadNotebooks}
+                  className="mt-3 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                >
+                  Retry
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">
