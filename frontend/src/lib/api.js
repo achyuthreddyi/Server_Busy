@@ -248,6 +248,30 @@ export const generateTimeline = async (id, options = {}) => {
 };
 
 // ======================
+// LESSON PLANNER API
+// ======================
+
+/**
+ * Fetch all lesson plans for listing page
+ * @returns {Promise<Object>} Response containing lesson plans array
+ */
+export const fetchLessonPlans = async () => {
+  return apiRequest('/lesson-planner');
+};
+
+/**
+ * Fetch individual lesson plan by ID
+ * @param {string|number} id - Lesson plan ID
+ * @returns {Promise<Object>} Response containing lesson plan details
+ */
+export const fetchLessonPlan = async (id) => {
+  if (!id) {
+    throw new Error('Lesson plan ID is required');
+  }
+  return apiRequest(`/lesson-planner/${id}`);
+};
+
+// ======================
 // UTILITY FUNCTIONS
 // ======================
 
@@ -310,6 +334,10 @@ export default {
   generateBriefingDoc,
   generateFAQs,
   generateTimeline,
+  
+  // Lesson Planner
+  fetchLessonPlans,
+  fetchLessonPlan,
   
   // Utilities
   checkServerHealth,

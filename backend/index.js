@@ -132,6 +132,276 @@ const notebookData = [
   }
 ];
 
+// Mock lesson planner data - represents subjects a teacher teaches for different classes
+const lessonPlannerData = [
+  {
+    id: 1,
+    subject: "Mathematics",
+    classes: ["Grade 7 A", "Grade 7 C"],
+    color: "bg-blue-50 border-blue-200",
+    icon: "📊",
+    description: "Algebra, geometry, and basic statistics for Grade 7 students",
+    topics: ["Algebra", "Geometry", "Statistics", "Number Theory"],
+    academicYear: "2023-24",
+    createdDate: "August 15, 2023",
+    // Consolidated data (average across all classes)
+    totalLessons: 45,
+    completedLessons: 28,
+    nextLesson: "Quadratic Equations Introduction",
+    nextLessonDate: "2024-01-25",
+    // Class-specific data
+    classData: [
+      {
+        className: "Grade 7 A",
+        totalLessons: 45,
+        completedLessons: 32,
+        progress: 71,
+        nextLesson: "Quadratic Equations Introduction",
+        nextLessonDate: "2024-01-25",
+        upcomingLessons: [
+          { id: 1, title: "Quadratic Equations Introduction", date: "2024-01-25", duration: "45 minutes", status: "scheduled" },
+          { id: 2, title: "Solving Quadratic Equations", date: "2024-01-27", duration: "45 minutes", status: "scheduled" },
+          { id: 3, title: "Graphing Quadratics", date: "2024-01-30", duration: "60 minutes", status: "scheduled" }
+        ],
+        recentLessons: [
+          { id: 1, title: "Linear Equations Advanced", date: "2024-01-22", duration: "45 minutes", status: "completed" },
+          { id: 2, title: "Systems of Equations Practice", date: "2024-01-20", duration: "45 minutes", status: "completed" },
+          { id: 3, title: "Word Problems with Linear Equations", date: "2024-01-18", duration: "45 minutes", status: "completed" }
+        ]
+      },
+      {
+        className: "Grade 7 C",
+        totalLessons: 45,
+        completedLessons: 25,
+        progress: 56,
+        nextLesson: "Systems of Linear Equations Review",
+        nextLessonDate: "2024-01-26",
+        upcomingLessons: [
+          { id: 1, title: "Systems of Linear Equations Review", date: "2024-01-26", duration: "45 minutes", status: "scheduled" },
+          { id: 2, title: "Introduction to Quadratic Equations", date: "2024-01-29", duration: "45 minutes", status: "scheduled" },
+          { id: 3, title: "Basic Quadratic Practice", date: "2024-01-31", duration: "60 minutes", status: "scheduled" }
+        ],
+        recentLessons: [
+          { id: 1, title: "Linear Equations Review", date: "2024-01-23", duration: "45 minutes", status: "completed" },
+          { id: 2, title: "Solving Simple Systems", date: "2024-01-21", duration: "45 minutes", status: "completed" },
+          { id: 3, title: "Graphing Linear Functions", date: "2024-01-19", duration: "45 minutes", status: "completed" }
+        ]
+      }
+    ]
+  },
+  {
+    id: 2,
+    subject: "Biology",
+    classes: ["Grade 8 D", "Grade 8 B"],
+    color: "bg-green-50 border-green-200",
+    icon: "🧬",
+    description: "Basic biology concepts including cell structure, genetics, and ecosystems",
+    topics: ["Cell Biology", "Genetics", "Ecology", "Human Body Systems"],
+    academicYear: "2023-24",
+    createdDate: "August 20, 2023",
+    // Consolidated data
+    totalLessons: 38,
+    completedLessons: 22,
+    nextLesson: "Photosynthesis Process",
+    nextLessonDate: "2024-01-26",
+    // Class-specific data
+    classData: [
+      {
+        className: "Grade 8 D",
+        totalLessons: 38,
+        completedLessons: 26,
+        progress: 68,
+        nextLesson: "Photosynthesis Process",
+        nextLessonDate: "2024-01-26",
+        upcomingLessons: [
+          { id: 1, title: "Photosynthesis Process", date: "2024-01-26", duration: "50 minutes", status: "scheduled" },
+          { id: 2, title: "Cellular Respiration", date: "2024-01-28", duration: "50 minutes", status: "scheduled" }
+        ],
+        recentLessons: [
+          { id: 1, title: "Cell Structure Review", date: "2024-01-24", duration: "50 minutes", status: "completed" },
+          { id: 2, title: "Plant vs Animal Cells", date: "2024-01-22", duration: "50 minutes", status: "completed" }
+        ]
+      },
+      {
+        className: "Grade 8 B",
+        totalLessons: 38,
+        completedLessons: 18,
+        progress: 47,
+        nextLesson: "Cell Structure Advanced",
+        nextLessonDate: "2024-01-27",
+        upcomingLessons: [
+          { id: 1, title: "Cell Structure Advanced", date: "2024-01-27", duration: "50 minutes", status: "scheduled" },
+          { id: 2, title: "Introduction to Photosynthesis", date: "2024-01-30", duration: "50 minutes", status: "scheduled" }
+        ],
+        recentLessons: [
+          { id: 1, title: "Basic Cell Structure", date: "2024-01-23", duration: "50 minutes", status: "completed" },
+          { id: 2, title: "Cell Types Overview", date: "2024-01-21", duration: "50 minutes", status: "completed" }
+        ]
+      }
+    ]
+  },
+  {
+    id: 3,
+    subject: "Civics",
+    classes: ["Grade 7 A", "Grade 7 C"],
+    color: "bg-purple-50 border-purple-200",
+    icon: "🏛️",
+    description: "Introduction to government, democracy, and civic responsibilities",
+    topics: ["Democracy", "Constitution", "Rights & Duties", "Local Government"],
+    academicYear: "2023-24",
+    createdDate: "August 18, 2023",
+    // Consolidated data
+    totalLessons: 32,
+    completedLessons: 18,
+    nextLesson: "Local Government Structure",
+    nextLessonDate: "2024-01-27",
+    // Class-specific data
+    classData: [
+      {
+        className: "Grade 7 A",
+        totalLessons: 32,
+        completedLessons: 21,
+        progress: 66,
+        nextLesson: "Local Government Structure",
+        nextLessonDate: "2024-01-27",
+        upcomingLessons: [
+          { id: 1, title: "Local Government Structure", date: "2024-01-27", duration: "40 minutes", status: "scheduled" }
+        ],
+        recentLessons: [
+          { id: 1, title: "Constitutional Rights", date: "2024-01-24", duration: "40 minutes", status: "completed" }
+        ]
+      },
+      {
+        className: "Grade 7 C",
+        totalLessons: 32,
+        completedLessons: 15,
+        progress: 47,
+        nextLesson: "Fundamental Rights Review",
+        nextLessonDate: "2024-01-28",
+        upcomingLessons: [
+          { id: 1, title: "Fundamental Rights Review", date: "2024-01-28", duration: "40 minutes", status: "scheduled" }
+        ],
+        recentLessons: [
+          { id: 1, title: "Introduction to Constitution", date: "2024-01-25", duration: "40 minutes", status: "completed" }
+        ]
+      }
+    ]
+  },
+  {
+    id: 4,
+    subject: "Chemistry",
+    classes: ["Grade 9 A", "Grade 9 B"],
+    color: "bg-orange-50 border-orange-200",
+    icon: "⚗️",
+    description: "Basic chemistry principles including atomic structure and chemical reactions",
+    topics: ["Atomic Structure", "Chemical Reactions", "Periodic Table", "Acids & Bases"],
+    academicYear: "2023-24",
+    createdDate: "August 22, 2023",
+    // Consolidated data
+    totalLessons: 42,
+    completedLessons: 25,
+    nextLesson: "Chemical Bonding Types",
+    nextLessonDate: "2024-01-28",
+    // Class-specific data
+    classData: [
+      {
+        className: "Grade 9 A",
+        totalLessons: 42,
+        completedLessons: 28,
+        progress: 67,
+        nextLesson: "Chemical Bonding Types",
+        nextLessonDate: "2024-01-28",
+        upcomingLessons: [
+          { id: 1, title: "Chemical Bonding Types", date: "2024-01-28", duration: "60 minutes", status: "scheduled" }
+        ],
+        recentLessons: [
+          { id: 1, title: "Atomic Structure Review", date: "2024-01-25", duration: "60 minutes", status: "completed" }
+        ]
+      },
+      {
+        className: "Grade 9 B",
+        totalLessons: 42,
+        completedLessons: 22,
+        progress: 52,
+        nextLesson: "Atomic Structure Advanced",
+        nextLessonDate: "2024-01-29",
+        upcomingLessons: [
+          { id: 1, title: "Atomic Structure Advanced", date: "2024-01-29", duration: "60 minutes", status: "scheduled" }
+        ],
+        recentLessons: [
+          { id: 1, title: "Basic Atomic Theory", date: "2024-01-26", duration: "60 minutes", status: "completed" }
+        ]
+      }
+    ]
+  },
+  {
+    id: 5,
+    subject: "English Literature",
+    classes: ["Grade 10 A"],
+    color: "bg-yellow-50 border-yellow-200",
+    icon: "📚",
+    description: "Classic and modern literature analysis with focus on critical thinking",
+    topics: ["Poetry", "Drama", "Prose", "Literary Devices"],
+    academicYear: "2023-24",
+    createdDate: "August 25, 2023",
+    // Consolidated data
+    totalLessons: 36,
+    completedLessons: 20,
+    nextLesson: "Poetry Analysis Techniques",
+    nextLessonDate: "2024-01-29",
+    // Class-specific data (single class)
+    classData: [
+      {
+        className: "Grade 10 A",
+        totalLessons: 36,
+        completedLessons: 20,
+        progress: 56,
+        nextLesson: "Poetry Analysis Techniques",
+        nextLessonDate: "2024-01-29",
+        upcomingLessons: [
+          { id: 1, title: "Poetry Analysis Techniques", date: "2024-01-29", duration: "45 minutes", status: "scheduled" }
+        ],
+        recentLessons: [
+          { id: 1, title: "Shakespeare's Sonnets", date: "2024-01-26", duration: "45 minutes", status: "completed" }
+        ]
+      }
+    ]
+  },
+  {
+    id: 6,
+    subject: "Physics",
+    classes: ["Grade 11 Science"],
+    color: "bg-indigo-50 border-indigo-200",
+    icon: "⚡",
+    description: "Fundamental physics concepts including mechanics, electricity, and waves",
+    topics: ["Mechanics", "Electricity", "Magnetism", "Waves", "Optics"],
+    academicYear: "2023-24",
+    createdDate: "August 28, 2023",
+    // Consolidated data
+    totalLessons: 48,
+    completedLessons: 30,
+    nextLesson: "Electromagnetic Induction",
+    nextLessonDate: "2024-01-30",
+    // Class-specific data (single class)
+    classData: [
+      {
+        className: "Grade 11 Science",
+        totalLessons: 48,
+        completedLessons: 30,
+        progress: 63,
+        nextLesson: "Electromagnetic Induction",
+        nextLessonDate: "2024-01-30",
+        upcomingLessons: [
+          { id: 1, title: "Electromagnetic Induction", date: "2024-01-30", duration: "75 minutes", status: "scheduled" }
+        ],
+        recentLessons: [
+          { id: 1, title: "Magnetic Fields", date: "2024-01-27", duration: "75 minutes", status: "completed" }
+        ]
+      }
+    ]
+  }
+];
+
 // API Routes
 
 // Get all documents (existing)
@@ -319,6 +589,83 @@ app.get('/api/discover', (req, res) => {
   }
 });
 
+// LESSON PLANNER API ENDPOINTS
+
+// Get all lesson plans for listing
+app.get('/api/lesson-planner', (req, res) => {
+  console.log("Returning all lesson plans");
+  try {
+    // Return lesson plans with summary data for listing page
+    const lessonPlansListing = lessonPlannerData.map(plan => {
+      // Calculate consolidated progress from class data
+      const totalCompleted = plan.classData.reduce((sum, classData) => sum + classData.completedLessons, 0);
+      const totalLessons = plan.classData.reduce((sum, classData) => sum + classData.totalLessons, 0);
+      const consolidatedProgress = totalLessons > 0 ? Math.round((totalCompleted / totalLessons) * 100) : 0;
+      
+      return {
+        id: plan.id,
+        subject: plan.subject,
+        classes: plan.classes,
+        color: plan.color,
+        icon: plan.icon,
+        description: plan.description,
+        totalLessons: totalLessons,
+        completedLessons: Math.round(totalCompleted / plan.classData.length), // Average
+        nextLesson: plan.nextLesson,
+        nextLessonDate: plan.nextLessonDate,
+        progress: consolidatedProgress
+      };
+    });
+    res.json({ lessonPlans: lessonPlansListing });
+  } catch (error) {
+    console.error("Error fetching lesson plans:", error);
+    res.status(500).json({ error: "Failed to fetch lesson plans" });
+  }
+});
+
+// Get individual lesson plan by ID
+app.get('/api/lesson-planner/:id', (req, res) => {
+  const lessonPlanId = parseInt(req.params.id);
+  console.log(`Returning lesson plan with ID: ${lessonPlanId}`);
+  
+  try {
+    const lessonPlan = lessonPlannerData.find(plan => plan.id === lessonPlanId);
+    
+    if (!lessonPlan) {
+      return res.status(404).json({ error: "Lesson plan not found" });
+    }
+    
+    // Calculate consolidated progress from class data
+    const totalCompleted = lessonPlan.classData.reduce((sum, classData) => sum + classData.completedLessons, 0);
+    const totalLessons = lessonPlan.classData.reduce((sum, classData) => sum + classData.totalLessons, 0);
+    const consolidatedProgress = totalLessons > 0 ? Math.round((totalCompleted / totalLessons) * 100) : 0;
+    
+    // Add additional detail for individual plan view
+    const detailedPlan = {
+      ...lessonPlan,
+      progress: consolidatedProgress,
+      completedLessons: Math.round(totalCompleted / lessonPlan.classData.length), // Average
+      
+      // Consolidated upcoming lessons (mix from all classes, sorted by date)
+      upcomingLessons: lessonPlan.classData
+        .flatMap(classData => classData.upcomingLessons || [])
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+        .slice(0, 3), // Show next 3 lessons
+        
+      // Consolidated recent lessons (mix from all classes, sorted by date desc)
+      recentLessons: lessonPlan.classData
+        .flatMap(classData => classData.recentLessons || [])
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .slice(0, 3) // Show last 3 lessons
+    };
+    
+    res.json({ lessonPlan: detailedPlan });
+  } catch (error) {
+    console.error("Error fetching lesson plan:", error);
+    res.status(500).json({ error: "Failed to fetch lesson plan" });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Backend server running on http://localhost:${PORT}`);
   console.log(`Available endpoints:`);
@@ -328,4 +675,6 @@ app.listen(PORT, () => {
   console.log(`  PUT  /api/notebooks/:id/sources`);
   console.log(`  POST /api/notebooks/:id/chat`);
   console.log(`  GET  /api/discover?q=<query>&type=<type>&limit=<limit>`);
+  console.log(`  GET  /api/lesson-planner`);
+  console.log(`  GET  /api/lesson-planner/:id`);
 }); 

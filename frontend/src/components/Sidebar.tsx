@@ -38,6 +38,15 @@ export default function Sidebar() {
       )
     },
     {
+      name: 'Lesson Planner',
+      href: '/lesson-planner',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a1 1 0 012 0v4h6V3a1 1 0 112 0v4h2a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V8a1 1 0 011-1h2zM4 8v12h16V8H4zm4 6h8m-8 4h4" />
+        </svg>
+      )
+    },
+    {
       name: 'Settings',
       href: '/settings',
       icon: (
