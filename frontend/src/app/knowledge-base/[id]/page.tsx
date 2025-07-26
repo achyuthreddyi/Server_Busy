@@ -16,6 +16,16 @@ interface Source {
   dateAdded: string;
 }
 
+interface DiscoverResource {
+  id: string;
+  title: string;
+  type: 'pdf' | 'doc' | 'text' | 'youtube';
+  url: string;
+  description: string;
+  subject: string;
+  level: string;
+}
+
 interface Notebook {
   id: number;
   title: string;
@@ -60,10 +70,14 @@ export default function NotebookDetail() {
   // Update sources in backend when changed using the API service
   const updateSourcesInBackend = async (updatedSources: Source[]) => {
     try {
-      await updateNotebookSources(id, updatedSources);
+      console.log('Updating sources in backend:', updatedSources.length, 'sources');
+      const response = await updateNotebookSources(id, updatedSources);
+      console.log('Backend sources update successful:', response);
+      return response;
     } catch (err) {
-      console.error('Error updating sources:', err);
-      // Could show a toast notification here in the future
+      console.error('Error updating sources in backend:', err);
+      // Re-throw the error so calling functions can handle it
+      throw err;
     }
   };
 
@@ -94,6 +108,54 @@ export default function NotebookDetail() {
   const handleDiscover = () => {
     // Placeholder for discover functionality
     console.log('Discover clicked');
+  };
+
+  const handleImportResources = async (discoverResources: DiscoverResource[]) => {
+    try {
+      console.log(`Importing ${discoverResources.length} resources:`, discoverResources);
+
+      // Convert discovered resources to notebook sources
+      const newSources: Source[] = discoverResources.map((resource) => ({
+        id: `imported_${resource.id}_${Date.now()}`, // Create unique ID for notebook source
+        title: resource.title,
+        type: resource.type === 'youtube' ? 'url' : resource.type, // Convert youtube to url type
+        selected: true, // Auto-select imported resources
+        dateAdded: 'Just now'
+      }));
+
+      console.log('Converted to notebook sources:', newSources);
+
+      // Add new sources to existing sources (append, don't replace)
+      const updatedSources = [...sources, ...newSources];
+      console.log(`Total sources after import: ${updatedSources.length} (was ${sources.length})`);
+
+      // Update local state first for immediate UI feedback
+      setSources(updatedSources);
+
+      // Update backend with new sources
+      const response = await updateSourcesInBackend(updatedSources);
+      console.log('Backend update response:', response);
+
+      console.log(`✅ Successfully imported ${newSources.length} resources to notebook "${notebook?.title}"`);
+      
+      // You could add a toast notification here in the future
+      // showToast(`Successfully imported ${newSources.length} resources!`, 'success');
+      
+    } catch (err) {
+      console.error('❌ Error importing resources:', err);
+      
+      // Revert local state if backend update failed
+      // This ensures UI stays in sync with backend
+      try {
+        const data = await fetchNotebook(id) as { notebook: Notebook };
+        setSources(data.notebook.sources);
+      } catch (revertErr) {
+        console.error('Failed to revert sources after import error:', revertErr);
+      }
+      
+      // Could show an error notification here in the future
+      // showToast('Failed to import resources. Please try again.', 'error');
+    }
   };
 
   const handleSendMessage = async (message: string) => {
@@ -235,6 +297,7 @@ export default function NotebookDetail() {
           onSelectAll={handleSelectAll}
           onAddSource={handleAddSource}
           onDiscover={handleDiscover}
+          onImportResources={handleImportResources}
         />
 
         {/* Center Panel - Chat Interface */}

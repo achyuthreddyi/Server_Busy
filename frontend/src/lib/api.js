@@ -113,6 +113,39 @@ export const sendChatMessage = async (id, message, selectedSources = []) => {
 };
 
 // ======================
+// DISCOVER/SEARCH API
+// ======================
+
+/**
+ * Search for discoverable resources
+ * @param {string} query - Search query
+ * @param {Object} options - Search options
+ * @param {string} options.type - Resource type filter ('pdf', 'doc', 'text', 'youtube', 'all')
+ * @param {number} options.limit - Maximum number of results
+ * @returns {Promise<Object>} Response containing search results
+ */
+export const searchResources = async (query, options = {}) => {
+  if (!query || typeof query !== 'string' || query.trim() === '') {
+    throw new Error('Search query is required and must be a non-empty string');
+  }
+
+  const { type = 'all', limit = 20 } = options;
+  
+  // Build query parameters
+  const params = new URLSearchParams({
+    q: query.trim(),
+    limit: limit.toString()
+  });
+
+  // Only add type filter if it's not 'all'
+  if (type && type !== 'all') {
+    params.set('type', type);
+  }
+
+  return apiRequest(`/discover?${params.toString()}`);
+};
+
+// ======================
 // NOTEBOOK ACTIONS API
 // ======================
 
@@ -267,6 +300,9 @@ export default {
   createNotebook,
   deleteNotebook,
   addNotebookSource,
+  
+  // Discover/Search
+  searchResources,
   
   // Studio Actions
   generateAudioOverview,
