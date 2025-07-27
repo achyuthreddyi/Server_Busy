@@ -221,28 +221,30 @@ For support and questions, please open an issue in the repository or contact the
 
 The following screenshots demonstrate the complete user workflow from dashboard to AI audit:
 
-#### 1. Dashboard Overview
-![Dashboard](ss/Screenshot%202025-07-27%20121234.png)
-*Main dashboard showing class overview, metrics, and quick actions*
-
-#### 2. Class Metrics & Details
+#### 1. Class Metrics & Details
 ![Class Metrics](ss/Screenshot%202025-07-27%20121310.png)
+
 *Detailed class view with student information and performance metrics*
 
-#### 3. Quick View Mode
+#### 2. Quick View Mode
 ![Quick View](ss/Screenshot%202025-07-27%20121800.png)
+
 *Quick view interface for class preparation and lesson overview*
 
-#### 4. Live Assist Interface
+#### 3. Live Assist Interface
 ![Live Assist](ss/Screenshot%202025-07-27%20121500.png)
+![Live Assist](ss/image.png)
+
 *Real-time AI assistance during class with contextual support*
 
-#### 5. Knowledge Base
+#### 4. Knowledge Base
 ![AI Audit](ss/Screenshot%202025-07-27%20121618.png)
+
 *Post-class analysis with engagement scoring and insights*
 
-#### 6. AI Audit Analysis
+#### 5. AI Audit Analysis
 ![Knowledge Base](ss/Screenshot%202025-07-27%20121403.png)
+
 *Document management and AI-powered knowledge retrieval*
 
 ---
