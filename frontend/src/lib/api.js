@@ -272,6 +272,30 @@ export const fetchLessonPlan = async (id) => {
 };
 
 // ======================
+// TEACHER DASHBOARD API
+// ======================
+
+/**
+ * Fetch all teacher's classes for dashboard
+ * @returns {Promise<Object>} Response containing classes array
+ */
+export const fetchTeacherClasses = async () => {
+  return apiRequest('/teacher/classes');
+};
+
+/**
+ * Fetch individual class details with students
+ * @param {string|number} id - Class ID
+ * @returns {Promise<Object>} Response containing class details and students
+ */
+export const fetchClassDetails = async (id) => {
+  if (!id) {
+    throw new Error('Class ID is required');
+  }
+  return apiRequest(`/teacher/classes/${id}`);
+};
+
+// ======================
 // UTILITY FUNCTIONS
 // ======================
 
@@ -338,6 +362,10 @@ export default {
   // Lesson Planner
   fetchLessonPlans,
   fetchLessonPlan,
+  
+  // Teacher Dashboard
+  fetchTeacherClasses,
+  fetchClassDetails,
   
   // Utilities
   checkServerHealth,

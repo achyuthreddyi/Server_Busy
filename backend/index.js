@@ -402,6 +402,187 @@ const lessonPlannerData = [
   }
 ];
 
+// Teacher's classes data for dashboard
+const teacherClassData = [
+  {
+    id: 1,
+    name: "Grade 7 A",
+    subject: "Mathematics",
+    totalStudents: 32,
+    presentToday: 28,
+    averagePerformance: 78,
+    color: "bg-blue-50 border-blue-200",
+    iconColor: "text-blue-600",
+    icon: "📊",
+    schedule: "Mon, Wed, Fri - 9:00 AM",
+    room: "Room 201",
+    nextClass: "Today 2:00 PM",
+    recentActivity: "Quiz submitted by 25 students",
+    performanceTrend: "up", // up, down, stable
+    teacher: "Ms. Sarah Johnson"
+  },
+  {
+    id: 2,
+    name: "Grade 7 C",
+    subject: "Mathematics", 
+    totalStudents: 30,
+    presentToday: 27,
+    averagePerformance: 82,
+    color: "bg-green-50 border-green-200",
+    iconColor: "text-green-600",
+    icon: "📊",
+    schedule: "Tue, Thu - 10:30 AM",
+    room: "Room 201",
+    nextClass: "Tomorrow 10:30 AM",
+    recentActivity: "Assignment graded",
+    performanceTrend: "up",
+    teacher: "Ms. Sarah Johnson"
+  },
+  {
+    id: 3,
+    name: "Grade 8 D",
+    subject: "Biology",
+    totalStudents: 28,
+    presentToday: 26,
+    averagePerformance: 75,
+    color: "bg-purple-50 border-purple-200", 
+    iconColor: "text-purple-600",
+    icon: "🧬",
+    schedule: "Mon, Wed, Fri - 11:00 AM",
+    room: "Science Lab 1",
+    nextClass: "Today 11:00 AM",
+    recentActivity: "Lab report pending from 8 students",
+    performanceTrend: "stable",
+    teacher: "Ms. Sarah Johnson"
+  },
+  {
+    id: 4,
+    name: "Grade 8 B",
+    subject: "Biology",
+    totalStudents: 29,
+    presentToday: 24,
+    averagePerformance: 69,
+    color: "bg-orange-50 border-orange-200",
+    iconColor: "text-orange-600", 
+    icon: "🧬",
+    schedule: "Tue, Thu, Sat - 2:00 PM",
+    room: "Science Lab 1",
+    nextClass: "Today 2:00 PM",
+    recentActivity: "Test scheduled for next week",
+    performanceTrend: "down",
+    teacher: "Ms. Sarah Johnson"
+  },
+  {
+    id: 5,
+    name: "Grade 10 A",
+    subject: "English Literature",
+    totalStudents: 25,
+    presentToday: 23,
+    averagePerformance: 85,
+    color: "bg-yellow-50 border-yellow-200",
+    iconColor: "text-yellow-600",
+    icon: "📚",
+    schedule: "Daily - 1:00 PM",
+    room: "Room 105",
+    nextClass: "Today 1:00 PM",
+    recentActivity: "Essay submissions reviewed",
+    performanceTrend: "up",
+    teacher: "Ms. Sarah Johnson"
+  },
+  {
+    id: 6,
+    name: "Grade 11 Science",
+    subject: "Physics",
+    totalStudents: 22,
+    presentToday: 20,
+    averagePerformance: 88,
+    color: "bg-indigo-50 border-indigo-200",
+    iconColor: "text-indigo-600",
+    icon: "⚡",
+    schedule: "Mon, Wed, Fri - 3:30 PM",
+    room: "Physics Lab",
+    nextClass: "Tomorrow 3:30 PM",
+    recentActivity: "Practical exam completed",
+    performanceTrend: "up",
+    teacher: "Ms. Sarah Johnson"
+  }
+];
+
+// Student data for each class
+const studentData = {
+  1: [ // Grade 7 A Mathematics
+    { id: 1, name: "Alice Johnson", rollNo: "7A01", attendance: 95, performance: 88, lastGrade: "A", status: "present", parentContact: "+1-234-567-8901", email: "alice.j@school.edu" },
+    { id: 2, name: "Bob Smith", rollNo: "7A02", attendance: 87, performance: 75, lastGrade: "B+", status: "present", parentContact: "+1-234-567-8902", email: "bob.s@school.edu" },
+    { id: 3, name: "Carol Davis", rollNo: "7A03", attendance: 92, performance: 82, lastGrade: "A-", status: "present", parentContact: "+1-234-567-8903", email: "carol.d@school.edu" },
+    { id: 4, name: "David Brown", rollNo: "7A04", attendance: 78, performance: 68, lastGrade: "B", status: "absent", parentContact: "+1-234-567-8904", email: "david.b@school.edu" },
+    { id: 5, name: "Emma Wilson", rollNo: "7A05", attendance: 98, performance: 92, lastGrade: "A+", status: "present", parentContact: "+1-234-567-8905", email: "emma.w@school.edu" },
+    { id: 6, name: "Frank Miller", rollNo: "7A06", attendance: 85, performance: 77, lastGrade: "B+", status: "present", parentContact: "+1-234-567-8906", email: "frank.m@school.edu" },
+    { id: 7, name: "Grace Lee", rollNo: "7A07", attendance: 90, performance: 85, lastGrade: "A-", status: "present", parentContact: "+1-234-567-8907", email: "grace.l@school.edu" },
+    { id: 8, name: "Henry Taylor", rollNo: "7A08", attendance: 82, performance: 70, lastGrade: "B", status: "present", parentContact: "+1-234-567-8908", email: "henry.t@school.edu" },
+    { id: 9, name: "Isabel Garcia", rollNo: "7A09", attendance: 94, performance: 86, lastGrade: "A-", status: "present", parentContact: "+1-234-567-8909", email: "isabel.g@school.edu" },
+    { id: 10, name: "Jack Robinson", rollNo: "7A10", attendance: 89, performance: 79, lastGrade: "B+", status: "present", parentContact: "+1-234-567-8910", email: "jack.r@school.edu" },
+    { id: 11, name: "Katie Chen", rollNo: "7A11", attendance: 96, performance: 90, lastGrade: "A", status: "present", parentContact: "+1-234-567-8911", email: "katie.c@school.edu" },
+    { id: 12, name: "Liam Martinez", rollNo: "7A12", attendance: 83, performance: 74, lastGrade: "B", status: "present", parentContact: "+1-234-567-8912", email: "liam.m@school.edu" },
+    { id: 13, name: "Mia Thompson", rollNo: "7A13", attendance: 91, performance: 83, lastGrade: "A-", status: "present", parentContact: "+1-234-567-8913", email: "mia.t@school.edu" },
+    { id: 14, name: "Noah Davis", rollNo: "7A14", attendance: 86, performance: 76, lastGrade: "B+", status: "present", parentContact: "+1-234-567-8914", email: "noah.d@school.edu" },
+    { id: 15, name: "Olivia White", rollNo: "7A15", attendance: 93, performance: 87, lastGrade: "A-", status: "present", parentContact: "+1-234-567-8915", email: "olivia.w@school.edu" },
+    { id: 16, name: "Peter Kim", rollNo: "7A16", attendance: 88, performance: 78, lastGrade: "B+", status: "present", parentContact: "+1-234-567-8916", email: "peter.k@school.edu" },
+    { id: 17, name: "Quinn Johnson", rollNo: "7A17", attendance: 90, performance: 81, lastGrade: "B+", status: "present", parentContact: "+1-234-567-8917", email: "quinn.j@school.edu" },
+    { id: 18, name: "Rachel Green", rollNo: "7A18", attendance: 97, performance: 91, lastGrade: "A", status: "present", parentContact: "+1-234-567-8918", email: "rachel.g@school.edu" },
+    { id: 19, name: "Sam Wilson", rollNo: "7A19", attendance: 84, performance: 73, lastGrade: "B", status: "present", parentContact: "+1-234-567-8919", email: "sam.w@school.edu" },
+    { id: 20, name: "Tara Lopez", rollNo: "7A20", attendance: 92, performance: 84, lastGrade: "A-", status: "present", parentContact: "+1-234-567-8920", email: "tara.l@school.edu" },
+    { id: 21, name: "Uma Patel", rollNo: "7A21", attendance: 89, performance: 80, lastGrade: "B+", status: "absent", parentContact: "+1-234-567-8921", email: "uma.p@school.edu" },
+    { id: 22, name: "Victor Brown", rollNo: "7A22", attendance: 87, performance: 77, lastGrade: "B+", status: "present", parentContact: "+1-234-567-8922", email: "victor.b@school.edu" },
+    { id: 23, name: "Wendy Clark", rollNo: "7A23", attendance: 95, performance: 89, lastGrade: "A", status: "present", parentContact: "+1-234-567-8923", email: "wendy.c@school.edu" },
+    { id: 24, name: "Xavier Lee", rollNo: "7A24", attendance: 81, performance: 71, lastGrade: "B", status: "present", parentContact: "+1-234-567-8924", email: "xavier.l@school.edu" },
+    { id: 25, name: "Yara Ahmed", rollNo: "7A25", attendance: 93, performance: 85, lastGrade: "A-", status: "present", parentContact: "+1-234-567-8925", email: "yara.a@school.edu" },
+    { id: 26, name: "Zoe Taylor", rollNo: "7A26", attendance: 88, performance: 79, lastGrade: "B+", status: "absent", parentContact: "+1-234-567-8926", email: "zoe.t@school.edu" },
+    { id: 27, name: "Aaron Miller", rollNo: "7A27", attendance: 90, performance: 82, lastGrade: "A-", status: "present", parentContact: "+1-234-567-8927", email: "aaron.m@school.edu" },
+    { id: 28, name: "Bella Rodriguez", rollNo: "7A28", attendance: 86, performance: 75, lastGrade: "B+", status: "present", parentContact: "+1-234-567-8928", email: "bella.r@school.edu" },
+    { id: 29, name: "Carlos Garcia", rollNo: "7A29", attendance: 91, performance: 83, lastGrade: "A-", status: "absent", parentContact: "+1-234-567-8929", email: "carlos.g@school.edu" },
+    { id: 30, name: "Diana Singh", rollNo: "7A30", attendance: 94, performance: 87, lastGrade: "A-", status: "present", parentContact: "+1-234-567-8930", email: "diana.s@school.edu" },
+    { id: 31, name: "Ethan Cooper", rollNo: "7A31", attendance: 85, performance: 76, lastGrade: "B+", status: "present", parentContact: "+1-234-567-8931", email: "ethan.c@school.edu" },
+    { id: 32, name: "Fiona Hall", rollNo: "7A32", attendance: 92, performance: 84, lastGrade: "A-", status: "present", parentContact: "+1-234-567-8932", email: "fiona.h@school.edu" }
+  ],
+  2: [ // Grade 7 C Mathematics  
+    { id: 33, name: "Ivy Chen", rollNo: "7C01", attendance: 94, performance: 89, lastGrade: "A", status: "present", parentContact: "+1-234-567-8933", email: "ivy.c@school.edu" },
+    { id: 34, name: "Jack Anderson", rollNo: "7C02", attendance: 88, performance: 78, lastGrade: "B+", status: "present", parentContact: "+1-234-567-8934", email: "jack.a@school.edu" },
+    { id: 35, name: "Kate Thompson", rollNo: "7C03", attendance: 96, performance: 91, lastGrade: "A+", status: "present", parentContact: "+1-234-567-8935", email: "kate.t@school.edu" },
+    { id: 36, name: "Liam Garcia", rollNo: "7C04", attendance: 80, performance: 72, lastGrade: "B", status: "absent", parentContact: "+1-234-567-8936", email: "liam.g@school.edu" },
+    { id: 37, name: "Mia Rodriguez", rollNo: "7C05", attendance: 93, performance: 86, lastGrade: "A-", status: "present", parentContact: "+1-234-567-8937", email: "mia.r@school.edu" },
+    { id: 38, name: "Nathan Brooks", rollNo: "7C06", attendance: 87, performance: 77, lastGrade: "B+", status: "present", parentContact: "+1-234-567-8938", email: "nathan.b@school.edu" },
+    { id: 39, name: "Olivia Turner", rollNo: "7C07", attendance: 95, performance: 88, lastGrade: "A", status: "present", parentContact: "+1-234-567-8939", email: "olivia.t@school.edu" },
+    { id: 40, name: "Paul Wright", rollNo: "7C08", attendance: 82, performance: 74, lastGrade: "B", status: "present", parentContact: "+1-234-567-8940", email: "paul.w@school.edu" },
+    { id: 41, name: "Quinn Adams", rollNo: "7C09", attendance: 91, performance: 83, lastGrade: "A-", status: "present", parentContact: "+1-234-567-8941", email: "quinn.a@school.edu" },
+    { id: 42, name: "Ruby Martinez", rollNo: "7C10", attendance: 89, performance: 80, lastGrade: "B+", status: "present", parentContact: "+1-234-567-8942", email: "ruby.m@school.edu" },
+    { id: 43, name: "Sophie Clark", rollNo: "7C11", attendance: 97, performance: 92, lastGrade: "A+", status: "present", parentContact: "+1-234-567-8943", email: "sophie.c@school.edu" },
+    { id: 44, name: "Tyler Evans", rollNo: "7C12", attendance: 84, performance: 75, lastGrade: "B+", status: "present", parentContact: "+1-234-567-8944", email: "tyler.e@school.edu" },
+    { id: 45, name: "Uma Williams", rollNo: "7C13", attendance: 92, performance: 85, lastGrade: "A-", status: "present", parentContact: "+1-234-567-8945", email: "uma.w@school.edu" },
+    { id: 46, name: "Victor Davis", rollNo: "7C14", attendance: 86, performance: 76, lastGrade: "B+", status: "present", parentContact: "+1-234-567-8946", email: "victor.d@school.edu" },
+    { id: 47, name: "Willow Green", rollNo: "7C15", attendance: 94, performance: 87, lastGrade: "A-", status: "present", parentContact: "+1-234-567-8947", email: "willow.g@school.edu" },
+    { id: 48, name: "Xander Lee", rollNo: "7C16", attendance: 88, performance: 79, lastGrade: "B+", status: "present", parentContact: "+1-234-567-8948", email: "xander.l@school.edu" },
+    { id: 49, name: "Yasmin Ahmed", rollNo: "7C17", attendance: 90, performance: 81, lastGrade: "B+", status: "present", parentContact: "+1-234-567-8949", email: "yasmin.a@school.edu" },
+    { id: 50, name: "Zara Johnson", rollNo: "7C18", attendance: 93, performance: 84, lastGrade: "A-", status: "present", parentContact: "+1-234-567-8950", email: "zara.j@school.edu" },
+    { id: 51, name: "Adam Foster", rollNo: "7C19", attendance: 85, performance: 76, lastGrade: "B+", status: "absent", parentContact: "+1-234-567-8951", email: "adam.f@school.edu" },
+    { id: 52, name: "Bella Santos", rollNo: "7C20", attendance: 91, performance: 82, lastGrade: "A-", status: "present", parentContact: "+1-234-567-8952", email: "bella.s@school.edu" },
+    { id: 53, name: "Caleb White", rollNo: "7C21", attendance: 87, performance: 78, lastGrade: "B+", status: "present", parentContact: "+1-234-567-8953", email: "caleb.w@school.edu" },
+    { id: 54, name: "Daisy Patel", rollNo: "7C22", attendance: 96, performance: 90, lastGrade: "A", status: "present", parentContact: "+1-234-567-8954", email: "daisy.p@school.edu" },
+    { id: 55, name: "Eli Brown", rollNo: "7C23", attendance: 83, performance: 73, lastGrade: "B", status: "present", parentContact: "+1-234-567-8955", email: "eli.b@school.edu" },
+    { id: 56, name: "Freya Wilson", rollNo: "7C24", attendance: 92, performance: 85, lastGrade: "A-", status: "present", parentContact: "+1-234-567-8956", email: "freya.w@school.edu" },
+    { id: 57, name: "Gabriel Kim", rollNo: "7C25", attendance: 89, performance: 80, lastGrade: "B+", status: "present", parentContact: "+1-234-567-8957", email: "gabriel.k@school.edu" },
+    { id: 58, name: "Hazel Cooper", rollNo: "7C26", attendance: 94, performance: 86, lastGrade: "A-", status: "present", parentContact: "+1-234-567-8958", email: "hazel.c@school.edu" },
+    { id: 59, name: "Ian Taylor", rollNo: "7C27", attendance: 86, performance: 77, lastGrade: "B+", status: "absent", parentContact: "+1-234-567-8959", email: "ian.t@school.edu" },
+    { id: 60, name: "Jade Miller", rollNo: "7C28", attendance: 90, performance: 81, lastGrade: "B+", status: "present", parentContact: "+1-234-567-8960", email: "jade.m@school.edu" },
+    { id: 61, name: "Kyle Rodriguez", rollNo: "7C29", attendance: 88, performance: 79, lastGrade: "B+", status: "present", parentContact: "+1-234-567-8961", email: "kyle.r@school.edu" },
+    { id: 62, name: "Luna Singh", rollNo: "7C30", attendance: 95, performance: 88, lastGrade: "A", status: "present", parentContact: "+1-234-567-8962", email: "luna.s@school.edu" }
+  ],
+  // Add data for other classes (3, 4, 5, 6) as needed...
+  3: [], // Grade 8 D Biology - placeholder
+  4: [], // Grade 8 B Biology - placeholder  
+  5: [], // Grade 10 A English Literature - placeholder
+  6: []  // Grade 11 Science Physics - placeholder
+};
+
 // API Routes
 
 // Get all documents (existing)
@@ -677,4 +858,60 @@ app.listen(PORT, () => {
   console.log(`  GET  /api/discover?q=<query>&type=<type>&limit=<limit>`);
   console.log(`  GET  /api/lesson-planner`);
   console.log(`  GET  /api/lesson-planner/:id`);
+  console.log(`  GET  /api/teacher/classes`);
+  console.log(`  GET  /api/teacher/classes/:id`);
+}); 
+
+// TEACHER DASHBOARD API ENDPOINTS
+
+// Get all teacher's classes for dashboard
+app.get('/api/teacher/classes', (req, res) => {
+  console.log("Returning teacher's classes");
+  try {
+    res.json({ classes: teacherClassData });
+  } catch (error) {
+    console.error("Error fetching teacher classes:", error);
+    res.status(500).json({ error: "Failed to fetch teacher classes" });
+  }
+});
+
+// Get individual class details with students
+app.get('/api/teacher/classes/:id', (req, res) => {
+  const classId = parseInt(req.params.id);
+  console.log(`Returning class details for class ID: ${classId}`);
+  
+  try {
+    const classInfo = teacherClassData.find(cls => cls.id === classId);
+    
+    if (!classInfo) {
+      return res.status(404).json({ error: "Class not found" });
+    }
+    
+    // Get students for this class
+    const students = studentData[classId] || [];
+    
+    // Calculate real-time metrics
+    const presentStudents = students.filter(s => s.status === 'present').length;
+    const attendancePercentage = students.length > 0 ? Math.round((presentStudents / students.length) * 100) : 0;
+    const averagePerformance = students.length > 0 ? Math.round(students.reduce((sum, s) => sum + s.performance, 0) / students.length) : 0;
+    const averageAttendance = students.length > 0 ? Math.round(students.reduce((sum, s) => sum + s.attendance, 0) / students.length) : 0;
+    
+    // Return class info with students and calculated metrics
+    const classDetails = {
+      ...classInfo,
+      students,
+      metrics: {
+        totalStudents: students.length,
+        presentToday: presentStudents,
+        attendancePercentage,
+        averagePerformance,
+        averageAttendance
+      }
+    };
+    
+    res.json({ class: classDetails });
+  } catch (error) {
+    console.error("Error fetching class details:", error);
+    res.status(500).json({ error: "Failed to fetch class details" });
+  }
 }); 
