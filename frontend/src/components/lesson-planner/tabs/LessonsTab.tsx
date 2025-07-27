@@ -399,7 +399,7 @@ export default function LessonsTab({ lessonPlan, onEditLesson }: LessonsTabProps
                 {isDragOver && draggedLesson && (
                   <div className="mx-4 mb-3 p-4 border-2 border-dashed border-indigo-400 rounded-lg bg-indigo-50 flex-shrink-0">
                     <div className="text-center text-indigo-600 font-medium">
-                      🎯 Drop "{draggedLesson.title}" here to mark as {column.title.toLowerCase()}
+                      🎯 Drop &quot{draggedLesson.title}&quot here to mark as {column.title.toLowerCase()}
                     </div>
                   </div>
                 )}
