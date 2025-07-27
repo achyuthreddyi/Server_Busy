@@ -1,203 +1,252 @@
-# Product Requirements Document (PRD)
+# Server Busy - AI Teacher Companion
 
-## Product Name
-**AI Teacher Companion for Multi-Grade Classrooms**  
-*Project Codename: Vidya Mitra ("Friend of Knowledge")*
+A comprehensive AI-powered teaching assistant platform designed to support educators in multi-grade classrooms with intelligent content generation, real-time assistance, and performance analytics.
 
-**Version:** 1.0  
-**Date:** July 24, 2025  
-**Author:** [Your Name/Team Name]  
-**Status:** Draft
+## 🎯 Overview
+
+Server Busy is an innovative AI Teacher Companion that leverages Google Cloud AI Studio, Gemini, Vertex AI, and Firebase to create a seamless teaching experience. The platform helps teachers reduce administrative burden, generate personalized content, and track student progress through an intuitive interface.
+
+## 🚀 Key Features
+
+### 📊 Dashboard & Class Management
+- **Class Overview**: View all classes with key metrics including attendance, performance, and student counts
+- **Quick Actions**: Access common tasks like taking attendance, viewing analytics, and scheduling
+- **Search & Filter**: Easily find specific classes or students
+- **Real-time Stats**: Monitor class performance and attendance at a glance
+
+### 🎓 Take Class Workflow
+The platform follows a structured workflow for class preparation and delivery:
+
+1. **Quick View**: Overview of class details, lesson plans, and student information
+2. **Live Assist**: Real-time AI assistance during class with contextual support
+3. **AI Audit**: Post-class analysis and insights for continuous improvement
+
+### 🤖 AI-Powered Features
+- **Content Generation**: Create lesson plans, worksheets, and assessments tailored to different grade levels
+- **Real-time Assistance**: Get instant help during class with AI-powered suggestions
+- **Performance Analytics**: Track student progress and identify learning gaps
+- **Multilingual Support**: Generate content in multiple languages for diverse classrooms
+
+### 📚 Knowledge Base
+- **Document Processing**: Upload and process PDF documents for AI reference
+- **RAG Integration**: Retrieve relevant information from uploaded materials
+- **Smart Search**: Find specific content across all uploaded documents
+
+## 🏗️ Architecture
+
+### Frontend (Next.js 15 + TypeScript)
+- **Framework**: Next.js 15 with App Router
+- **Styling**: Tailwind CSS v4
+- **Language**: TypeScript
+- **Key Components**:
+  - Dashboard with class management
+  - Take Class workflow (Quick View → Live Assist → AI Audit)
+  - Knowledge Base with document processing
+  - Lesson Planner with AI assistance
+
+### Backend (FastAPI + Python)
+- **Framework**: FastAPI with Uvicorn
+- **AI Services**: Google Cloud AI Platform, Gemini, Vertex AI
+- **Database**: Firebase Firestore
+- **Storage**: Google Cloud Storage
+- **Key Features**:
+  - Agentic RAG workflow
+  - PDF document processing
+  - Real-time chat completion
+  - Multi-modal AI assistance
+
+## 🛠️ Technology Stack
+
+### Frontend
+- **React 19.1.0** - UI framework
+- **Next.js 15.4.4** - Full-stack framework
+- **TypeScript** - Type safety
+- **Tailwind CSS 4** - Styling
+- **ESLint** - Code quality
+
+### Backend
+- **FastAPI 0.104.1** - API framework
+- **Uvicorn** - ASGI server
+- **Google Cloud AI Platform** - AI/ML services
+- **Google Generative AI** - Gemini integration
+- **Firebase Admin** - Authentication & database
+- **PyPDF2** - PDF processing
+- **Unstructured** - Document parsing
+
+## 📁 Project Structure
+
+```
+Server_Busy/
+├── frontend/                 # Next.js frontend application
+│   ├── src/
+│   │   ├── app/             # App Router pages
+│   │   │   ├── dashboard/   # Class management
+│   │   │   ├── ai-audit/    # Post-class analysis
+│   │   │   ├── knowledge-base/ # Document management
+│   │   │   └── lesson-planner/ # Lesson planning
+│   │   ├── components/      # Reusable UI components
+│   │   └── lib/            # Utility functions
+│   └── package.json
+├── backend/                 # FastAPI backend
+│   ├── rag/               # AI/RAG functionality
+│   │   ├── server.py      # Main API server
+│   │   ├── agentic_workflow.py # AI workflow logic
+│   │   ├── models.py      # Data models
+│   │   └── requirements.txt
+│   └── package.json
+└── README.md
+```
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 18+ and npm
+- Python 3.8+
+- Google Cloud Platform account
+- Firebase project
+
+### Frontend Setup
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+### Backend Setup
+```bash
+cd backend/rag
+pip install -r requirements.txt
+python server.py
+```
+
+### Environment Configuration
+Create `.env` files with your Google Cloud and Firebase credentials:
+
+```env
+GOOGLE_CLOUD_PROJECT=your-project-id
+GOOGLE_APPLICATION_CREDENTIALS=path/to/service-account.json
+FIREBASE_PROJECT_ID=your-firebase-project
+```
+
+## 🎯 User Flow
+
+### 1. Dashboard Access
+- Teachers land on the dashboard showing all their classes
+- View key metrics: total classes, students, attendance, performance
+- Quick access to common actions
+
+### 2. Class Preparation
+- Select a class to enter "Take Class" mode
+- **Quick View**: Review class details, lesson plans, student roster
+- **Live Assist**: Enable AI assistance for real-time support during class
+
+### 3. AI Audit & Analysis
+- Post-class analysis with engagement scoring
+- Key insights and recommendations
+- Performance tracking over time
+
+### 4. Knowledge Management
+- Upload curriculum documents (PDFs)
+- AI-powered document processing and indexing
+- Smart search across all materials
+
+## 🔧 Development
+
+### Running in Development
+```bash
+# Terminal 1 - Frontend
+cd frontend
+npm run dev
+
+# Terminal 2 - Backend
+cd backend/rag
+uvicorn server:app --reload
+```
+
+### Building for Production
+```bash
+# Frontend
+cd frontend
+npm run build
+npm start
+
+# Backend
+cd backend/rag
+uvicorn server:app --host 0.0.0.0 --port 8000
+```
+
+## 📊 API Endpoints
+
+### Core Endpoints
+- `GET /health` - Health check
+- `POST /chat/completion` - AI chat completion
+- `POST /upload-pdf` - Document upload and processing
+- `GET /files/{file_id}/chunks` - Retrieve document chunks
+- `DELETE /files/{file_id}` - Delete uploaded documents
+
+### Frontend Routes
+- `/dashboard` - Main dashboard
+- `/dashboard/[classId]` - Class details
+- `/dashboard/[classId]/take-class` - Take class workflow
+- `/ai-audit` - Post-class analysis
+- `/knowledge-base` - Document management
+- `/lesson-planner` - Lesson planning tools
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📝 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🙏 Acknowledgments
+
+- Google Cloud AI Platform for AI/ML capabilities
+- Firebase for backend services
+- Next.js team for the excellent framework
+- FastAPI for the high-performance API framework
+
+## 📞 Support
+
+For support and questions, please open an issue in the repository or contact the development team.
+
+## 📸 Screenshots
+
+### Application Flow Demo
+
+The following screenshots demonstrate the complete user workflow from dashboard to AI audit:
+
+#### 1. Class Metrics & Details
+![Class Metrics](ss/Screenshot%202025-07-27%20121310.png)
+
+*Detailed class view with student information and performance metrics*
+
+#### 2. Quick View Mode
+![Quick View](ss/Screenshot%202025-07-27%20121800.png)
+
+*Quick view interface for class preparation and lesson overview*
+
+#### 3. Live Assist Interface
+![Live Assist](ss/Screenshot%202025-07-27%20121500.png)
+![Live Assist](ss/image.png)
+
+*Real-time AI assistance during class with contextual support*
+
+#### 4. Knowledge Base
+![AI Audit](ss/Screenshot%202025-07-27%20121618.png)
+
+*Post-class analysis with engagement scoring and insights*
+
+#### 5. AI Audit Analysis
+![Knowledge Base](ss/Screenshot%202025-07-27%20121403.png)
+
+*Document management and AI-powered knowledge retrieval*
 
 ---
 
-## 1. Introduction
-
-### 1.1 Executive Summary
-The **AI Teacher Companion** is an innovative Agentic AI solution designed to empower teachers in under-resourced, multi-grade classrooms, especially in rural and semi-urban India. Leveraging Google Cloud AI Studio, Gemini, Vertex AI, and Firebase, the product aims to:
-- Reduce administrative and pedagogical burden on teachers
-- Automate content generation
-- Personalize learning paths
-- Streamline administrative tasks
-
-**Ultimate Goal:**  
-Enhance education quality and address diverse learning levels within a single classroom.
-
----
-
-### 1.2 Vision Statement
-Transform multi-grade classrooms into vibrant, personalized learning hubs by providing teachers with an intelligent AI companion that:
-- Automates mundane tasks
-- Generates tailored content
-- Offers data-driven insights
-
----
-
-### 1.3 Problem Statement
-In under-resourced Indian schools, a single teacher often manages multiple grades without adequate time or tools to:
-- Create localized teaching aids
-- Address diverse learning levels
-- Personalize education
-
-**Challenge:**  
-Build an AI companion to lessen their burden and amplify their impact.
-
----
-
-### 1.4 Goals & Objectives
-
-**Primary Goal:**  
-- Reduce preparation and administrative workload for teachers in multi-grade classrooms
-
-**Secondary Goal:**  
-- Enhance the teacher’s ability to provide personalized and differentiated instruction
-
-**Tertiary Goal:**  
-- Improve student engagement and learning outcomes through tailored content and adaptive learning
-
-**Quantifiable Objectives:**
-- **Objective 1:** Reduce teacher preparation time for lesson planning and material creation by 50% within 6 months of pilot deployment
-- **Objective 2:** Increase teacher satisfaction with available teaching aids and support by 30% in pilot schools
-- **Objective 3:** Improve average student engagement scores by 20% in supported classrooms
-
----
-
-### 1.5 Target Audience
-
-- **Primary:** Teachers in rural and semi-urban Indian schools, especially those managing multi-grade classrooms
-- **Secondary:** School administrators, educational NGOs, and government bodies focused on primary education
-
----
-
-### 1.6 Scope
-
-- **MVP Focus:** Core functionalities related to content generation, basic assessment support, and administrative assistance
-- **Future Iterations:** Advanced analytics, parent communication portals, broader resource integration
-
----
-
-## 2. User Stories / Use Cases
-
-### 2.1 Teacher User Stories
-
-As a teacher, I want to:
-- Generate a lesson plan for "Fractions" that caters to Grade 3 and Grade 5 simultaneously
-- Create differentiated worksheets on "Addition" for students with varying understanding levels (remedial and advanced)
-- Receive AI-suggested, culturally relevant examples and stories for my lessons
-- Administer quick, digital assessments and receive immediate feedback on student performance
-- Track individual student progress over time and highlight areas needing support
-- Automate attendance tracking and basic report card data compilation
-- Draft personalized messages to parents about student progress or school events, in local languages
-- Access professional development modules and teaching strategies tailored for multi-grade settings
-- Use the AI companion effectively even with limited or no internet connectivity
-- Speak lesson ideas and have the AI convert them into structured text or generate related content
-
----
-
-## 3. Functional Requirements
-
-### 3.1 Intelligent Content Generation & Customization
-
-- **FR-3.1.1 Lesson Plan Generation**
-  - Input topic, grade levels, and learning objectives to generate comprehensive lesson plans
-  - Specify duration, activities, and assessment methods
-  - Support for "combined" lesson plans for multi-grade teaching
-
-- **FR-3.1.2 Worksheet & Activity Creation**
-  - Generate differentiated worksheets, quizzes, and interactive activities by topic, grade, and difficulty
-  - Support various question types (MCQ, fill-in-the-blanks, short answer)
-  - Generate different versions for varied student levels
-
-- **FR-3.1.3 Storytelling & Explanations**
-  - Generate engaging stories, analogies, and simplified explanations
-  - Incorporate user-specified keywords for localization
-
-- **FR-3.1.4 Multilingual Support**
-  - Content generation and translation in major regional Indian languages
-
-- **FR-3.1.5 Resource Curation**
-  - Suggest relevant external educational resources (videos, simulations, articles)
-
-- **FR-3.1.6 Curriculum Ingestion**
-  - Allow teachers to upload curriculum documents (PDF, text) for AI reference
-
----
-
-### 3.2 Adaptive Learning & Student Progress Tracking
-
-- **FR-3.2.1 Real-time Assessment Generation**
-  - Generate short, formative assessments based on lesson content
-
-- **FR-3.2.2 Assessment Input & Scoring**
-  - Intuitive interface for inputting student responses and automating scoring
-
-- **FR-3.2.3 Performance Analytics**
-  - Analyze assessment data to identify learning gaps, misconceptions, and strengths
-  - Visual dashboards for class and individual performance
-
-- **FR-3.2.4 Personalized Learning Path Recommendations**
-  - Recommend tailored learning activities or remedial content
-
-- **FR-3.2.5 Progress Reports**
-  - Generate concise progress reports for individual students
-
----
-
-### 3.3 Teacher Support & Workflow Automation
-
-- **FR-3.3.1 Attendance Management**
-  - Simple interface for daily attendance and report generation
-
-- **FR-3.3.2 Grading Assistance**
-  - Automated grading of objective assessments and feedback for subjective assignments
-
-- **FR-3.3.3 Parent Communication Drafts**
-  - Draft personalized messages to parents for review and sending
-
-- **FR-3.3.4 Professional Development Hub**
-  - Access to professional development modules and best practices
-
-- **FR-3.3.5 Query Answering**
-  - Knowledge base for curriculum, classroom management, and student challenges
-
----
-
-### 3.4 Interactive Learning Tools
-
-- **FR-3.4.1 AI-Assisted Whiteboard**
-  - Digital whiteboard with AI-generated diagrams, maps, and multimedia
-
-- **FR-3.4.2 Speech-to-Text & Text-to-Speech**
-  - Support for speech input and audio explanations
-
-- **FR-3.4.3 Gamified Learning Modules**
-  - Creation or suggestion of simple, curriculum-aligned educational games
-
----
-
-### 3.5 System & Platform Requirements
-
-- **FR-3.5.1 Offline Capability**
-  - Caching of generated content for offline access
-
-- **FR-3.5.2 Low-Bandwidth Optimization**
-  - Efficient performance under low or intermittent connectivity
-
-- **FR-3.5.3 Intuitive User Interface**
-  - Simple, intuitive UI for varying tech literacy; support for touch interactions
-
-- **FR-3.5.4 Cross-Platform Compatibility**
-  - Accessible via web browsers (responsive design) and lightweight Android app
-
-- **FR-3.5.5 Data Security & Privacy**
-  - Robust data security and privacy, adhering to educational data protection guidelines
-
----
-
-## 4. Key Success Metrics
-
-- **Teacher Engagement:** Daily/weekly active users, features used per session
-- **Time Savings:** Survey results on time saved per week
-- **Content Relevance:** Qualitative feedback on utility and accuracy of generated content
-- **Student Progress:** Improvement in assessment scores over time
-- **Retention:** Teacher retention rate on the platform
+**Built with ❤️ for educators worldwide**
