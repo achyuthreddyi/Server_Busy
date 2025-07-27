@@ -8,6 +8,8 @@ interface Message {
   role: 'user' | 'assistant';
   timestamp: Date;
   sources?: string[];
+  mediaType?: 'text' | 'image' | 'audio';
+  mediaUrl?: string;
 }
 
 interface ChatInterfaceProps {
@@ -27,12 +29,155 @@ export default function ChatInterface({
       content: `Welcome to your ${notebookTitle} knowledge base! I can help you explore and understand your study materials. What would you like to learn about today?`,
       role: 'assistant',
       timestamp: new Date(),
+      mediaType: 'text'
     }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // API service function to call the backend
+  const callLLMAssistAPI = async (question: string) => {
+    console.log('🔗 Making API call to backend from ChatInterface:');
+    console.log('   - Question:', question);
+    console.log('   - Notebook:', notebookTitle);
+    console.log('   - Selected Sources:', selectedSourcesCount);
+    
+    // Match the exact curl command format that works
+    const apiUrl = `http://34.170.197.199:8000/llm_assist?text=${encodeURIComponent(question)}`;
+    console.log('   - API URL:', apiUrl);
+    
+    try {
+      console.log('📡 Sending POST request (matching exact curl format)...');
+      console.log('   - Using fetch API');
+      console.log('   - URL:', apiUrl);
+      console.log('   - Method: POST');
+      
+      // Match your exact curl command:
+      // curl -X 'POST' 'http://34.170.197.199:8000/llm_assist?text=what%20is%20yur%20name' 
+      // -H 'accept: application/json' -H 'Content-Type: multipart/form-data'
+      const requestOptions = {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+          'Content-Type': 'multipart/form-data'
+        },
+        // No body - query params only (matching your curl)
+      };
+      
+      console.log('   - Request Options:', requestOptions);
+      console.log('   - Matching curl command exactly: POST with query params, no body');
+      
+      const response = await fetch(apiUrl, requestOptions);
+      
+      console.log('📥 Response received:');
+      console.log('   - Status:', response.status);
+      console.log('   - Status Text:', response.statusText);
+      console.log('   - OK:', response.ok);
+      console.log('   - Type:', response.type);
+      console.log('   - URL:', response.url);
+      console.log('   - Headers:', Object.fromEntries(response.headers.entries()));
+      
+      if (!response.ok) {
+        console.error('❌ API Error Response:');
+        console.error('   - Status:', response.status);
+        console.error('   - Status Text:', response.statusText);
+        
+        let errorText = '';
+        try {
+          errorText = await response.text();
+          console.error('   - Error Body:', errorText);
+        } catch (textError) {
+          console.error('   - Could not read error body:', textError);
+          errorText = `HTTP ${response.status} - ${response.statusText}`;
+        }
+        
+        throw new Error(`API Error: ${response.status} - ${response.statusText}. Body: ${errorText}`);
+      }
+      
+      let data;
+      const contentType = response.headers.get('content-type');
+      console.log('📄 Response Content-Type:', contentType);
+      
+      // Handle different response types from backend
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+        console.log('✅ JSON Response Data:', data);
+        
+        return {
+          success: true,
+          data: data,
+          content: data.content || data.text || data.response || JSON.stringify(data),
+          mediaType: data.type || 'text',
+          mediaUrl: data.url || data.media_url || null
+        };
+      } else if (contentType && (contentType.includes('image/') || contentType.includes('audio/'))) {
+        // Handle file responses (images/audio)
+        const blob = await response.blob();
+        const mediaUrl = URL.createObjectURL(blob);
+        const mediaType = contentType.includes('image/') ? 'image' : 'audio';
+        
+        console.log(`✅ ${mediaType.charAt(0).toUpperCase() + mediaType.slice(1)} Response:`, mediaUrl);
+        
+        return {
+          success: true,
+          data: blob,
+          content: `${mediaType.charAt(0).toUpperCase() + mediaType.slice(1)} generated successfully!`,
+          mediaType: mediaType,
+          mediaUrl: mediaUrl
+        };
+      } else {
+        // Fallback for plain text
+        data = await response.text();
+        console.log('✅ Text Response Data:', data);
+        
+        return {
+          success: true,
+          data: data,
+          content: data,
+          mediaType: 'text',
+          mediaUrl: null
+        };
+      }
+      
+    } catch (error: unknown) {
+      console.error('💥 API Call Failed:');
+      console.error('   - Error:', error);
+      console.error('   - Error Message:', error instanceof Error ? error.message : String(error));
+      console.error('   - Stack:', error instanceof Error ? error.stack : 'No stack trace');
+      
+      // Since curl works, this is likely a browser/fetch specific issue
+      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+        console.error('🚨 Browser fetch issue detected!');
+        console.error('💡 Possible solutions:');
+        console.error('   1. Browser security restrictions');
+        console.error('   2. Mixed content (HTTP vs HTTPS) issue');
+        console.error('   3. Network proxy/firewall blocking browser requests');
+        console.error('   4. Browser extension interference');
+        console.error('📝 Since curl works, the server and endpoint are fine');
+      }
+      
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+        content: `API Error: ${error instanceof Error ? error.message : String(error)}`,
+        mediaType: 'text',
+        mediaUrl: null
+      };
+    }
+  };
+
+  // Cleanup blob URLs when component unmounts to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      messages.forEach(message => {
+        if (message.mediaUrl && message.mediaUrl.startsWith('blob:')) {
+          URL.revokeObjectURL(message.mediaUrl);
+        }
+      });
+    };
+  }, [messages]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
