@@ -6,6 +6,9 @@ A comprehensive AI-powered teaching assistant platform designed to support educa
 
 Server Busy is an innovative AI Teacher Companion that leverages Google Cloud AI Studio, Gemini, Vertex AI, and Firebase to create a seamless teaching experience. The platform helps teachers reduce administrative burden, generate personalized content, and track student progress through an intuitive interface.
 
+## Prototye Link
+[http://34.170.197.199:3000/dashboard](http://34.170.197.199:3000/dashboard)
+
 ## 🚀 Key Features
 
 ### 📊 Dashboard & Class Management
@@ -199,9 +202,6 @@ uvicorn server:app --host 0.0.0.0 --port 8000
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
-
-## Development Link
-[http://34.170.197.199:3000/dashboard](http://34.170.197.199:3000/dashboard)
 
 ## 🙏 Acknowledgments
 
