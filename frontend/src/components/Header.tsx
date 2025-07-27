@@ -5,7 +5,7 @@ export default function Header() {
     <header className="bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Link href="/" className="text-2xl font-bold text-gray-800 hover:text-gray-600 transition-colors">
+          <Link href="/dashboard" className="text-2xl font-bold text-gray-800 hover:text-gray-600 transition-colors">
             MyApp
           </Link>
         </div>
