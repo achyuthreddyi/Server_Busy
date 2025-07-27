@@ -13,6 +13,13 @@ export { default as ClassHeader } from './class-detail/ClassHeader';
 export { default as ClassTabs } from './class-detail/ClassTabs';
 export { default as OverviewTab } from './class-detail/OverviewTab';
 
+// Take Class Components
+export { 
+  TakeClassHeader,
+  QuickViewStep,
+  LiveAssistStep
+} from './take-class';
+
 // Types
 export type { 
   TeacherClass,
@@ -22,5 +29,8 @@ export type {
   DashboardStats as DashboardStatsType,
   TabType,
   TabInfo,
-  QuickAction
+  QuickAction,
+  LessonPlan,
+  QuickViewData,
+  LiveAssistData
 } from './types'; 

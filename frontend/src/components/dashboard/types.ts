@@ -64,4 +64,33 @@ export interface QuickAction {
   description: string;
   icon: string;
   onClick: () => void;
+}
+
+// Take Class Flow Types (simplified)
+export interface LessonPlan {
+  id: string;
+  title: string;
+  duration: string;
+  objectives: string[];
+  materials: string[];
+  activities: string[];
+  assessment: string;
+  notes?: string;
+}
+
+export interface QuickViewData {
+  lessonPlan: LessonPlan;
+  presentStudents: Student[];
+  absentStudents: Student[];
+  importantNotes: string[];
+  reminders: string[];
+  materialsNeeded: string[];
+}
+
+export interface LiveAssistData {
+  sessionStartTime?: Date;
+  currentActivity?: string;
+  engagementLevel?: number;
+  pollActive?: boolean;
+  notesCount?: number;
 } 

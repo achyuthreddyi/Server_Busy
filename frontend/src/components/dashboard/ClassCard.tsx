@@ -24,6 +24,12 @@ export default function ClassCard({ classData }: ClassCardProps) {
   };
 
   const attendancePercentage = Math.round((classData.presentToday / classData.totalStudents) * 100);
+
+  const handleTakeClass = (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent the Link navigation
+    e.stopPropagation();
+    window.location.href = `/dashboard/${classData.id}/take-class`;
+  };
   
   return (
     <Link href={`/dashboard/${classData.id}`}>
@@ -85,6 +91,19 @@ export default function ClassCard({ classData }: ClassCardProps) {
         <div className="bg-white bg-opacity-40 rounded-lg p-3 mb-4">
           <div className="text-xs text-gray-600 mb-1">Recent Activity</div>
           <div className="text-sm text-gray-800">{classData.recentActivity}</div>
+        </div>
+
+        {/* Take Class Button */}
+        <div className="mb-4">
+          <button
+            onClick={handleTakeClass}
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 hover:shadow-lg transform hover:scale-105 flex items-center justify-center space-x-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+            <span>Take Class</span>
+          </button>
         </div>
 
         {/* Hover Arrow */}
