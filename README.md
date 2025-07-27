@@ -200,9 +200,8 @@ uvicorn server:app --host 0.0.0.0 --port 8000
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 📝 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+## Development Link
+[http://34.170.197.199:3000/dashboard](http://34.170.197.199:3000/dashboard)
 
 ## 🙏 Acknowledgments
 
