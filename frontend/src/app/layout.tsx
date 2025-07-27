@@ -128,7 +128,7 @@ export default function RootLayout({
         <div className="min-h-screen flex flex-col">
           <Header />
           <main className="flex-1 overflow-auto">
-        {children}
+            {children}
           </main>
           <Sidebar />
         </div>
